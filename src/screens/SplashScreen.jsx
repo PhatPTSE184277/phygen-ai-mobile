@@ -81,7 +81,6 @@ const SplashScreen = () => {
                 </Animated.View>
             </View>
 
-            {/* Bottom section with dots - positioned above background */}
             <View className='items-center pb-16' style={{ zIndex: 1 }}>
                 <View className='flex-row mb-8 space-x-2'>
                     <View className='w-2 h-2 bg-gray-400 rounded-full opacity-50' />

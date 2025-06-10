@@ -79,13 +79,12 @@ const WelcomeScreen = ({ navigation }) => {
         } else {
             // Navigate to next screen
             console.log('Get Started pressed');
-            // navigation.navigate('Login');
+            navigation.navigate('Login');
         }
     };
 
     const handleSkip = () => {
         console.log('Skip pressed');
-        // navigation.navigate('Login');
     };
 
     const handleDotPress = (index) => {
@@ -95,7 +94,6 @@ const WelcomeScreen = ({ navigation }) => {
 
     return (
         <View className='flex-1 bg-gray-100 relative'>
-            {/* Background Image */}
             <View
                 className='absolute bottom-0 left-0 right-0'
                 style={{ zIndex: 0 }}
@@ -111,7 +109,6 @@ const WelcomeScreen = ({ navigation }) => {
                 />
             </View>
 
-            {/* Fixed content - Logo */}
             <View className='items-center pt-16 pb-4' style={{ zIndex: 1 }}>
                 <Image
                     source={logo}
@@ -123,7 +120,6 @@ const WelcomeScreen = ({ navigation }) => {
                 />
             </View>
 
-            {/* Scrollable content */}
             <View className='flex-1' style={{ zIndex: 1 }}>
                 <ScrollView
                     ref={scrollViewRef}
@@ -161,7 +157,6 @@ const WelcomeScreen = ({ navigation }) => {
                 </ScrollView>
             </View>
 
-            {/* Fixed bottom section */}
             <View className='items-center pb-12 px-8' style={{ zIndex: 1 }}>
                 {/* Dots Indicator */}
                 <View className='flex-row justify-center mb-8'>
@@ -178,10 +173,8 @@ const WelcomeScreen = ({ navigation }) => {
                     ))}
                 </View>
 
-                {/* Navigation Buttons */}
                 <View className='flex-row justify-between items-center w-full'>
                     <TouchableOpacity onPress={handleSkip}>
-                        {/* Skip button placeholder */}
                     </TouchableOpacity>
 
                     <TouchableOpacity
