@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SplashScreen, WelcomeScreen } from '../screens';
+import { SplashScreen, WelcomeScreen, LoginScreen, RegisterScreen } from '../screens';
 
 const Stack = createNativeStackNavigator();
 
@@ -27,6 +27,22 @@ const AppNavigator = () => {
                     component={WelcomeScreen}
                     options={{
                         gestureEnabled: false
+                    }}
+                />
+
+                <Stack.Screen
+                    name='Login'
+                    component={LoginScreen}
+                    options={{
+                        gestureEnabled: true
+                    }}
+                />
+
+                 <Stack.Screen
+                    name='Register'
+                    component={RegisterScreen}
+                    options={{
+                        gestureEnabled: true
                     }}
                 />
             </Stack.Navigator>
