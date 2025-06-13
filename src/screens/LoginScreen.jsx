@@ -24,6 +24,7 @@ const LoginScreen = () => {
 
     const handleSignIn = () => {
         console.log('Sign In pressed');
+        navigation.navigate('Home');
     };
 
     const handleGoBack = () => {
@@ -61,7 +62,7 @@ const LoginScreen = () => {
                     onPress={handleGoBack}
                     className='flex-row items-center'
                 >
-                 <Text className='text-blue-500 text-base'>{`<< Go Back`}</Text>
+                    <Text className='text-blue-500 text-base'>{`<< Go Back`}</Text>
                 </TouchableOpacity>
             </View>
 
