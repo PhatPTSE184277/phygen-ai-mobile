@@ -54,14 +54,14 @@ const LoginScreen = () => {
             </View>
 
             <View
-                className='flex-row items-center px-4 pt-12 pb-8'
+                className='flex-row items-center mt-6 px-4 pt-12 pb-8'
                 style={{ zIndex: 1 }}
             >
                 <TouchableOpacity
                     onPress={handleGoBack}
                     className='flex-row items-center'
                 >
-                 <Text className='text-blue-500 text-base'>{`<< Go Back`}</Text>
+                 <Text className='text-blue-500 text-base font-medium'>{`<< Go Back`}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -147,7 +147,7 @@ const LoginScreen = () => {
                     >
                         <Image
                             source={googleIcon}
-                            style={{ width: 22, height: 28 }}
+                            style={{ width: 22, height: 20 }}
                             resizeMode='contain'
                         />
                     </TouchableOpacity>
@@ -167,7 +167,7 @@ const LoginScreen = () => {
                     >
                         <Image
                             source={facebookIcon}
-                            style={{ width: 22, height: 28 }}
+                            style={{ width: 22, height: 20 }}
                             resizeMode='contain'
                         />
                     </TouchableOpacity>
