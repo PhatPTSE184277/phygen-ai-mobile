@@ -1,7 +1,13 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { SplashScreen, WelcomeScreen, LoginScreen, RegisterScreen } from '../screens';
+import {
+    SplashScreen,
+    WelcomeScreen,
+    LoginScreen,
+    RegisterScreen,
+} from '../screens';
+import HomeTabs from './BottomTabs';
 
 const Stack = createNativeStackNavigator();
 
@@ -38,13 +44,14 @@ const AppNavigator = () => {
                     }}
                 />
 
-                 <Stack.Screen
+                <Stack.Screen
                     name='Register'
                     component={RegisterScreen}
                     options={{
                         gestureEnabled: true
                     }}
                 />
+                <Stack.Screen name='HomeTabs' component={HomeTabs} />
             </Stack.Navigator>
         </NavigationContainer>
     );

@@ -13,6 +13,7 @@ import bg1 from '../../assets/images/bg1.png';
 import googleIcon from '../../assets/images/gg.png';
 import facebookIcon from '../../assets/images/fb.png';
 import Feather from 'react-native-vector-icons/Feather';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -24,6 +25,7 @@ const LoginScreen = () => {
 
     const handleSignIn = () => {
         console.log('Sign In pressed');
+        navigation.navigate('HomeTabs');
     };
 
     const handleGoBack = () => {
@@ -61,7 +63,15 @@ const LoginScreen = () => {
                     onPress={handleGoBack}
                     className='flex-row items-center'
                 >
-                 <Text className='text-blue-500 text-base font-medium'>{`<< Go Back`}</Text>
+                    <Ionicons
+                        name='chevron-back-outline'
+                        size={20}
+                        color='#3B82F6'
+                        style={{ marginRight: 4 }}
+                    />
+                    <Text className='text-blue-500 text-base font-medium'>
+                        Back
+                    </Text>
                 </TouchableOpacity>
             </View>
 
