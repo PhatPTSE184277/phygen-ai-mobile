@@ -9,7 +9,6 @@ import bg1 from '../../assets/images/bg1.png';
 import homepage1 from '../../assets/images/homepage1.png';
 import homepage2 from '../../assets/images/homepage2.png';
 import homepage3 from '../../assets/images/homepage3.png';
-import Footer from '~/components/Footer';
 
 
 
@@ -161,7 +160,6 @@ const HomeScreen = () => {
 
 
             </ScrollView>
-            <Footer activeTab={activeTab} onTabPress={setActiveTab} />
         </>
     )
 }

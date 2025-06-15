@@ -5,7 +5,6 @@ import { ScrollView, Image, Dimensions, TextInput, TouchableOpacity } from 'reac
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Footer from '~/components/Footer';
 import bg1 from '../../assets/images/bg1.png';
 const { width, height } = Dimensions.get('window');
 const AccountScreen = () => {
@@ -95,7 +94,6 @@ const AccountScreen = () => {
                     </View>
                 </ScrollView>
             </SafeAreaView>
-            <Footer activeTab={activeTab} onTabPress={setActiveTab} />
         </>
     )
 }

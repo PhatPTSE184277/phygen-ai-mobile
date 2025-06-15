@@ -4,7 +4,6 @@ import { ScrollView, Image, Dimensions } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
-import Footer from '~/components/Footer';
 import bg1 from '../../assets/images/bg1.png';
 
 const { width, height } = Dimensions.get('window');
@@ -82,7 +81,6 @@ const NotificationScreen = () => {
 
 
             </View>
-            <Footer activeTab={activeTab} onTabPress={setActiveTab} />
         </>
     )
 }

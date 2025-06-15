@@ -4,7 +4,6 @@ import { ScrollView, Image, Dimensions, TextInput, TouchableOpacity } from 'reac
 
 import { Ionicons } from '@expo/vector-icons';
 
-import Footer from '~/components/Footer';
 import bg1 from '../../assets/images/bg1.png';
 import explore1 from '../../assets/images/explore1.png';
 import explore2 from '../../assets/images/explore2.png';
@@ -171,7 +170,6 @@ const ExploreScreen = () => {
 
 
             </View>
-            <Footer activeTab={activeTab} onTabPress={setActiveTab} />
         </>
     )
 }
