@@ -6,6 +6,8 @@ import {
     WelcomeScreen,
     LoginScreen,
     RegisterScreen,
+    PremiumScreen,
+    GenerateScreen,
 } from '../screens';
 import HomeTabs from './BottomTabs';
 
@@ -51,7 +53,22 @@ const AppNavigator = () => {
                         gestureEnabled: true
                     }}
                 />
+                  
                 <Stack.Screen name='HomeTabs' component={HomeTabs} />
+                <Stack.Screen
+                    name='Premium'
+                    component={PremiumScreen}
+                    options={{
+                        gestureEnabled: true
+                    }}
+                />
+                <Stack.Screen
+                    name='Generate'
+                    component={GenerateScreen}
+                    options={{
+                        gestureEnabled: true
+                    }}
+                />
             </Stack.Navigator>
         </NavigationContainer>
     );
