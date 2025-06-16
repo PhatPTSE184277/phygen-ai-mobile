@@ -6,9 +6,32 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import bg1 from '../../assets/images/bg1.png';
+import { useNavigation } from '@react-navigation/native';
 const { width, height } = Dimensions.get('window');
+
 const AccountScreen = () => {
     const [activeTab, setActiveTab] = useState('Account');
+    const navigation = useNavigation();
+
+    const handleMenuPress = (label) => {
+        switch (label) {
+            case 'Dashboard':
+                 console.log('Navigate to Dashboard');
+                break;
+            case 'My Profile':
+                console.log('Navigate to My Profile');
+                break;
+            case 'Generate':
+                navigation.navigate('Generate');
+                break;
+            case 'History':
+                console.log('Navigate to History');
+                break;
+            default:
+                break;
+        }
+    };
+
     return (
         <>
             <SafeAreaView className="flex-1 bg-gray-100 relative">
@@ -59,7 +82,6 @@ const AccountScreen = () => {
                         </View>
                     </View>
 
-
                     <View className="bg-white rounded-2xl p-4 mb-6 shadow-md border border-[#E2E8F0]">
                         <View className="flex-row justify-between items-center mb-2">
                             <Text className="font-semibold text-lg text-[#333]">
@@ -73,7 +95,7 @@ const AccountScreen = () => {
                         <Text className="text-base font-light mb-4 leading-5">
                             All-in-one tool for quick and easy test creation with full features.
                         </Text>
-                        <TouchableOpacity className="bg-[#4461F2] rounded-xl py-3">
+                        <TouchableOpacity className="bg-[#4461F2] rounded-xl py-3" onPress={() => navigation.navigate('Premium')}>
                             <Text className="text-center text-white font-bold tracking-wide text-base">
                                 TRY NOW
                             </Text>
@@ -84,10 +106,11 @@ const AccountScreen = () => {
                         {['Dashboard', 'My Profile', 'Generate', 'History'].map((label, index) => (
                             <TouchableOpacity
                                 key={index}
-                                className="flex-row justify-between items-center py-4 "
+                                className="flex-row justify-between items-center py-4"
                                 activeOpacity={0.7}
+                                onPress={() => handleMenuPress(label)}
                             >
-                                <Text className="text-lg font-medium ">{label}</Text>
+                                <Text className="text-lg font-medium">{label}</Text>
                                 <Ionicons name="chevron-forward" size={20} color="#858597" />
                             </TouchableOpacity>
                         ))}
@@ -99,4 +122,3 @@ const AccountScreen = () => {
 }
 
 export default AccountScreen
-

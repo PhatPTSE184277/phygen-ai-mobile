@@ -65,13 +65,10 @@ const LoginScreen = () => {
                 >
                     <Ionicons
                         name='chevron-back-outline'
-                        size={20}
+                        size={28}
                         color='#3B82F6'
                         style={{ marginRight: 4 }}
                     />
-                    <Text className='text-blue-500 text-base font-medium'>
-                        Back
-                    </Text>
                 </TouchableOpacity>
             </View>
 

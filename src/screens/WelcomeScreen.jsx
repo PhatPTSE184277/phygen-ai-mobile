@@ -77,7 +77,6 @@ const WelcomeScreen = ({ navigation }) => {
             setCurrentIndex(nextIndex);
             scrollToIndex(nextIndex);
         } else {
-            // Navigate to next screen
             console.log('Get Started pressed');
             navigation.navigate('Login');
         }

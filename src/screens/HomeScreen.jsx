@@ -55,7 +55,7 @@ const HomeScreen = () => {
                     }}>
                     <View >
                         <Text className="text-2xl font-bold text-white">Hi, NgocTHB</Text>
-                        <Text className="text-lg font-light text-white">Let's start create exam</Text>
+                        <Text className="text-lg font-light text-white">Let&apos;s start create exam</Text>
                     </View>
                     <Image
                         source={{ uri: 'https://img-s-msn-com.akamaized.net/tenant/amp/entityid/BB1msOP5?w=0&h=0&q=60&m=6&f=jpg&u=t' }}
@@ -145,7 +145,7 @@ const HomeScreen = () => {
                         <View className="flex-1 pr-2">
                             <Text className="text-lg font-bold text-purple-800 mb-1">Feedback</Text>
                             <Text className="text-sm text-purple-700">
-                                We'd love to hear your thoughts — please share your feedback with us!
+                                We&apos;d love to hear your thoughts — please share your feedback with us!
                             </Text>
                         </View>
 
