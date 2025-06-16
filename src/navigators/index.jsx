@@ -8,6 +8,7 @@ import {
     RegisterScreen,
     PremiumScreen,
     GenerateScreen,
+    SummaryScreen,
 } from '../screens';
 import HomeTabs from './BottomTabs';
 
@@ -65,6 +66,13 @@ const AppNavigator = () => {
                 <Stack.Screen
                     name='Generate'
                     component={GenerateScreen}
+                    options={{
+                        gestureEnabled: true
+                    }}
+                />
+                  <Stack.Screen
+                    name='Summary'
+                    component={SummaryScreen}
                     options={{
                         gestureEnabled: true
                     }}
