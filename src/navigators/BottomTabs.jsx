@@ -9,11 +9,13 @@ import {
   NotificationScreen, 
   AccountScreen 
 } from '../screens';
+import { useNavigation } from '@react-navigation/native';
 
 const BottomTabs = createBottomTabNavigator();
 const EmptyScreen = () => <View style={{flex: 1}}></View>;
 
 const HomeTabs = () => {
+  const navigation = useNavigation();
   return (
     <BottomTabs.Navigator
       screenOptions={{
@@ -81,7 +83,7 @@ const HomeTabs = () => {
               <TouchableOpacity
                 className="bg-[#f0f1fe] w-[56px] h-[56px] rounded-full items-center justify-center border-[6px] border-white"
                 onPress={() => {
-                  console.log('Plus button pressed');
+                  navigation.navigate('Generate')
                 }}
               >
                 <Ionicons name="add" size={24} color="#4461F2" />
