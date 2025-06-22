@@ -12,6 +12,10 @@ import {
 } from '../screens';
 import HomeTabs from './BottomTabs';
 
+import HistoryScreen from '~/screens/HistoryScreen';
+import ProfileScreen from '~/screens/ProfileScreen';
+import DashboardScreen from '~/screens/DashboardScreen';
+
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
@@ -54,7 +58,7 @@ const AppNavigator = () => {
                         gestureEnabled: true
                     }}
                 />
-                  
+
                 <Stack.Screen name='HomeTabs' component={HomeTabs} />
                 <Stack.Screen
                     name='Premium'
@@ -70,9 +74,30 @@ const AppNavigator = () => {
                         gestureEnabled: true
                     }}
                 />
-                  <Stack.Screen
+                <Stack.Screen
                     name='Summary'
                     component={SummaryScreen}
+                    options={{
+                        gestureEnabled: true
+                    }}
+                />
+                <Stack.Screen
+                    name='Profile'
+                    component={ProfileScreen}
+                    options={{
+                        gestureEnabled: true
+                    }}
+                />
+                <Stack.Screen
+                    name='History'
+                    component={HistoryScreen}
+                    options={{
+                        gestureEnabled: true
+                    }}
+                />
+                <Stack.Screen
+                    name='Dashboard'
+                    component={DashboardScreen}
                     options={{
                         gestureEnabled: true
                     }}

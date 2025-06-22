@@ -34,12 +34,12 @@ const ExploreScreen = () => {
                     <Text className="text-2xl font-bold ">Explore</Text>
 
                     <View className='mt-6'>
-                        <View className="flex-row items-center bg-white rounded-2xl px-4 py-1 shadow-sm">
+                        <View className="flex-row items-center bg-white rounded-2xl px-4 py-1">
                             <Ionicons name="search" size={18} color="#B8B8D2" />
                             <TextInput
                                 placeholder="Find Exams"
                                 placeholderTextColor="#B8B8D2"
-                                className="flex-1 px-2 text-black"
+                                className="flex-1 p-3 text-black"
                             />
                             <Ionicons name="options-outline" size={20} color="#B8B8D2" />
                         </View>

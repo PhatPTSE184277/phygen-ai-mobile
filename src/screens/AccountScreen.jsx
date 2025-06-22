@@ -16,16 +16,16 @@ const AccountScreen = () => {
     const handleMenuPress = (label) => {
         switch (label) {
             case 'Dashboard':
-                 console.log('Navigate to Dashboard');
+                navigation.navigate('Dashboard');
                 break;
             case 'My Profile':
-                console.log('Navigate to My Profile');
+                navigation.navigate('Profile');
                 break;
             case 'Generate':
                 navigation.navigate('Generate');
                 break;
             case 'History':
-                console.log('Navigate to History');
+                navigation.navigate('History');
                 break;
             default:
                 break;
