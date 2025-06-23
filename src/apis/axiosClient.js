@@ -23,7 +23,7 @@ const getAccessToken = async () => {
 
 const axiosClient = axios.create({
     baseURL,
-    timeout: 10000,
+    timeout: 5000, // Giảm timeout từ 10s xuống 5s
     paramsSerializer: (params) => queryString.stringify(params)
 });
 
@@ -49,10 +49,8 @@ axiosClient.interceptors.response.use(
         }
     },
     error => {
-        if (error.response && error.response.data) {
-            return Promise.reject(error.response.data);
-        }
-        return Promise.reject({ message: error.message || 'Network error' });
+        console.log('Axios error:', error.response?.status, error.message);
+        return Promise.reject(error);
     }
 );
 

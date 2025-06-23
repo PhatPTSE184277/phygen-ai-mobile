@@ -7,35 +7,39 @@ import {
     Image,
     Dimensions,
     StatusBar,
-    Alert,
     ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useDispatch } from 'react-redux';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosClient from '../apis/axiosClient';
 import { addAuth } from '../reduxs/reducers/authReducer';
+import { useAuthLogic } from '../utils/authLogic';
+import Toast from 'react-native-toast-message';
 import bg1 from '../../assets/images/bg1.png';
 import googleIcon from '../../assets/images/gg.png';
 import facebookIcon from '../../assets/images/fb.png';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-import { BASE_API_URL } from '@env';
-
-const baseURL = BASE_API_URL;
 
 const { width, height } = Dimensions.get('window');
 
 const LoginScreen = () => {
     const navigation = useNavigation();
     const dispatch = useDispatch();
+    const { isFirstTimeUse, setFirstTimeUsed } = useAuthLogic();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isPasswordShow, setIsPasswordShow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-
-    const handleSignIn = async () => {
+    const handleLogin = async () => {
         if (!email || !password) {
-            Alert.alert('Error', 'Please enter both email and password');
+            Toast.show({
+                type: 'error',
+                text1: 'Missing Information',
+                text2: 'Please enter both email and password',
+                position: 'top'
+            });
             return;
         }
 
@@ -48,32 +52,73 @@ const LoginScreen = () => {
             });
 
             if (response.data.success) {
+                const expiresIn = response.data.data.expiresIn;
+                const expiryTime = new Date().getTime() + expiresIn * 1000;
+
                 const authData = {
                     token: response.data.data.token,
+                    expiryTime: expiryTime,
                     _id: response.data.data.account.id || '',
                     username: response.data.data.account.username,
                     email: response.data.data.account.email,
-                    isFirstTimeUse: false,
+                    emailVerified: response.data.data.account.emailVerified,
                     accountType: response.data.data.account.accountType,
                     role: response.data.data.account.role,
-                    emailVerified: response.data.data.account.emailVerified
+                    isFirstTimeUse: false
                 };
 
-                dispatch(addAuth(authData));
-
-                Alert.alert('Success', 'Login successful!');
-                navigation.navigate('HomeTabs');
-            } else {
-                Alert.alert(
-                    'Login Failed',
-                    response.data.message || 'Login failed'
+                await AsyncStorage.setItem(
+                    'Auth_Data',
+                    JSON.stringify(authData)
                 );
+                dispatch(addAuth(authData));
+                if (isFirstTimeUse) {
+                    await setFirstTimeUsed();
+                }
+
+                Toast.show({
+                    type: 'success',
+                    text1: 'Login Successful!',
+                    text2: 'Welcome back!',
+                    position: 'top'
+                });
+            } else {
+                let errorMessage = 'Login failed';
+
+                if (response.data.error && Array.isArray(response.data.error)) {
+                    errorMessage =
+                        response.data.error[0] || 'Invalid credentials';
+                } else if (response.data.message) {
+                    errorMessage = response.data.message;
+                }
+
+                Toast.show({
+                    type: 'error',
+                    text1: 'Login Failed',
+                    text2: errorMessage,
+                    position: 'top'
+                });
             }
         } catch (error) {
-            Alert.alert(
-                'Login Failed',
-                error.message || 'Invalid email or password'
-            );
+            console.log('Login catch error:', error);
+            let errorMessage = 'Invalid email/password or inactive account.';
+            if (
+                error.response?.data?.error &&
+                Array.isArray(error.response.data.error)
+            ) {
+                errorMessage = error.response.data.error[0];
+            } else if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            Toast.show({
+                type: 'error',
+                text1: 'Login Failed',
+                text2: errorMessage,
+                position: 'top'
+            });
         } finally {
             setIsLoading(false);
         }
@@ -90,7 +135,6 @@ const LoginScreen = () => {
     return (
         <View className='flex-1 bg-gray-100 relative'>
             <StatusBar backgroundColor='#F3F4F6' barStyle='dark-content' />
-
             <View
                 className='absolute bottom-0 left-0 right-0'
                 style={{ zIndex: 0 }}
@@ -105,24 +149,24 @@ const LoginScreen = () => {
                     resizeMode='cover'
                 />
             </View>
-
             <View
                 className='flex-row items-center mt-6 px-4 pt-12 pb-8'
                 style={{ zIndex: 1 }}
             >
-                <TouchableOpacity
-                    onPress={handleGoBack}
-                    className='flex-row items-center'
-                >
-                    <Ionicons
-                        name='chevron-back-outline'
-                        size={28}
-                        color='#3B82F6'
-                        style={{ marginRight: 4 }}
-                    />
-                </TouchableOpacity>
+                {isFirstTimeUse && (
+                    <TouchableOpacity
+                        onPress={handleGoBack}
+                        className='flex-row items-center'
+                    >
+                        <Ionicons
+                            name='chevron-back-outline'
+                            size={28}
+                            color='#3B82F6'
+                            style={{ marginRight: 4 }}
+                        />
+                    </TouchableOpacity>
+                )}
             </View>
-
             <View className='flex-1 justify-center px-8' style={{ zIndex: 1 }}>
                 <View className='items-center mb-12'>
                     <Text className='text-3xl font-bold text-gray-900 text-center'>
@@ -169,7 +213,7 @@ const LoginScreen = () => {
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    onPress={handleSignIn}
+                    onPress={handleLogin}
                     className='bg-blue-600 py-4 rounded-2xl mb-8'
                     disabled={isLoading}
                 >
@@ -234,7 +278,7 @@ const LoginScreen = () => {
                 </View>
                 <View className='items-center pb-12 px-8' style={{ zIndex: 1 }}>
                     <Text className='text-gray-600 text-sm text-center'>
-                        If you don&apos;t an account you can{' '}
+                        If you don&apos;t an account you can
                         <Text
                             onPress={handleRegister}
                             className='text-blue-600 font-bold'

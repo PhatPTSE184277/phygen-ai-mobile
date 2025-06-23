@@ -76,8 +76,6 @@ const GenerateScreen = () => {
     return (
         <View className='flex-1 bg-gray-100 relative'>
             <StatusBar backgroundColor='#F3F4F6' barStyle='dark-content' />
-
-            {/* Background Image */}
             <View
                 className='absolute bottom-0 left-0 right-0'
                 style={{ zIndex: 0 }}
@@ -93,9 +91,8 @@ const GenerateScreen = () => {
                 />
             </View>
 
-            {/* Header */}
             <View
-                className='flex-row items-center mt-6 px-4 pt-12 pb-8'
+                className='flex-row items-center mt-6 px-4 pt-12 bg-transparent'
                 style={{ zIndex: 1 }}
             >
                 <TouchableOpacity
@@ -109,14 +106,12 @@ const GenerateScreen = () => {
                         style={{ marginRight: 4 }}
                     />
                 </TouchableOpacity>
-            </View>
-
-            <ScrollView className='flex-1 px-6' style={{ zIndex: 1 }}>
-                <Text className='text-2xl font-bold text-gray-900 mb-6'>
+                <Text className='text-2xl font-bold text-gray-900'>
                     Generate
                 </Text>
-
-                {/* Title Input */}
+            </View>
+            <ScrollView className='flex-1 px-6' style={{ zIndex: 1 }}>
+           
                 <View className='mb-6'>
                     <Text className='text-base font-medium text-gray-900 mb-3'>
                         Title
@@ -135,7 +130,6 @@ const GenerateScreen = () => {
                     />
                 </View>
 
-                {/* Grade */}
                 <View className='mb-6'>
                     <Text className='text-base font-medium text-gray-900 mb-3'>
                         Grade
@@ -203,7 +197,7 @@ const GenerateScreen = () => {
                     />
                 </View>
 
-                {/* Level */}
+         
                 <View className='mb-6'>
                     <Text className='text-base font-medium text-gray-900 mb-3'>
                         Level
@@ -231,7 +225,6 @@ const GenerateScreen = () => {
                     </View>
                 </View>
 
-                {/* Format */}
                 <View className='mb-6'>
                     <Text className='text-base font-medium text-gray-900 mb-3'>
                         Format
@@ -259,7 +252,6 @@ const GenerateScreen = () => {
                     </View>
                 </View>
 
-                {/* Matrix */}
                 <View className='mb-6'>
                     <Text className='text-base font-medium text-gray-900 mb-3'>
                         Matrix
@@ -287,7 +279,6 @@ const GenerateScreen = () => {
                     </View>
                 </View>
 
-                {/* Variants */}
                 <View className='mb-8'>
                     <Text className='text-base font-medium text-gray-900 mb-3'>
                         Variants

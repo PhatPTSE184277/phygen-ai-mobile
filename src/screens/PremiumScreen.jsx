@@ -60,7 +60,6 @@ const PremiumScreen = () => {
     return (
         <View className='flex-1 bg-gray-100 relative'>
             <StatusBar backgroundColor='#F3F4F6' barStyle='dark-content' />
-
             <View
                 className='absolute bottom-0 left-0 right-0'
                 style={{ zIndex: 0 }}
@@ -75,7 +74,6 @@ const PremiumScreen = () => {
                     resizeMode='cover'
                 />
             </View>
-
             <View
                 className='flex-row items-center mt-6 px-4 pt-12 pb-8'
                 style={{ zIndex: 1 }}
@@ -91,13 +89,12 @@ const PremiumScreen = () => {
                         style={{ marginRight: 4 }}
                     />
                 </TouchableOpacity>
+                <Text className='text-2xl font-bold text-gray-900'>
+                    Premium
+                </Text>
             </View>
-
             <ScrollView className='flex-1 px-8' style={{ zIndex: 1 }}>
                 <View className='items-center mb-8'>
-                    <Text className='text-3xl font-bold text-gray-900 text-center mb-2'>
-                        Premium
-                    </Text>
                     <Text className='text-base text-gray-600 text-center leading-6'>
                         The best experience tailored{'\n'}just for you.
                     </Text>
@@ -114,15 +111,18 @@ const PremiumScreen = () => {
                     />
                 </View>
 
-               <View className='mb-8' style={{ gap: 16 }}>
+                <View className='mb-8' style={{ gap: 16 }}>
                     {plans.map((plan) => (
                         <View
                             key={plan.id}
                             className='rounded-2xl'
                             style={{
                                 borderWidth: selectedPlan === plan.id ? 2 : 1,
-                                borderColor: selectedPlan === plan.id ? '#6366F1' : 'rgba(0,0,0,0.1)',
-                                borderRadius: 16,
+                                borderColor:
+                                    selectedPlan === plan.id
+                                        ? '#6366F1'
+                                        : 'rgba(0,0,0,0.1)',
+                                borderRadius: 16
                             }}
                         >
                             <TouchableOpacity
