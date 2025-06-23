@@ -6,26 +6,77 @@ import {
     TouchableOpacity,
     Image,
     Dimensions,
-    StatusBar
+    StatusBar,
+    Alert,
+    ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useDispatch } from 'react-redux';
+import axiosClient from '../apis/axiosClient';
+import { addAuth } from '../reduxs/reducers/authReducer';
 import bg1 from '../../assets/images/bg1.png';
 import googleIcon from '../../assets/images/gg.png';
 import facebookIcon from '../../assets/images/fb.png';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import { BASE_API_URL } from '@env';
+
+const baseURL = BASE_API_URL;
 
 const { width, height } = Dimensions.get('window');
 
 const LoginScreen = () => {
     const navigation = useNavigation();
+    const dispatch = useDispatch();
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isPasswordShow, setIsPasswordShow] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSignIn = () => {
-        console.log('Sign In pressed');
-        navigation.navigate('HomeTabs');
+    const handleSignIn = async () => {
+        if (!email || !password) {
+            Alert.alert('Error', 'Please enter both email and password');
+            return;
+        }
+
+        setIsLoading(true);
+
+        try {
+            const response = await axiosClient.post('/api/Auth/login', {
+                identifier: email.trim(),
+                password: password
+            });
+
+            if (response.data.success) {
+                const authData = {
+                    token: response.data.data.token,
+                    _id: response.data.data.account.id || '',
+                    username: response.data.data.account.username,
+                    email: response.data.data.account.email,
+                    isFirstTimeUse: false,
+                    accountType: response.data.data.account.accountType,
+                    role: response.data.data.account.role,
+                    emailVerified: response.data.data.account.emailVerified
+                };
+
+                dispatch(addAuth(authData));
+
+                Alert.alert('Success', 'Login successful!');
+                navigation.navigate('HomeTabs');
+            } else {
+                Alert.alert(
+                    'Login Failed',
+                    response.data.message || 'Login failed'
+                );
+            }
+        } catch (error) {
+            Alert.alert(
+                'Login Failed',
+                error.message || 'Invalid email or password'
+            );
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleGoBack = () => {
@@ -78,7 +129,6 @@ const LoginScreen = () => {
                         Sign In to{'\n'}Create Exam
                     </Text>
                 </View>
-
                 <View className='mb-4'>
                     <TextInput
                         className='bg-white px-4 py-4 rounded-2xl text-gray-700 shadow-sm'
@@ -88,9 +138,9 @@ const LoginScreen = () => {
                         onChangeText={setEmail}
                         keyboardType='email-address'
                         autoCapitalize='none'
+                        editable={!isLoading}
                     />
                 </View>
-
                 <View className='mb-2 relative'>
                     <TextInput
                         className='bg-white px-4 py-4 rounded-2xl text-gray-700 pr-12 shadow-sm'
@@ -99,10 +149,12 @@ const LoginScreen = () => {
                         value={password}
                         onChangeText={setPassword}
                         secureTextEntry={!isPasswordShow}
+                        editable={!isLoading}
                     />
                     <TouchableOpacity
                         className='absolute right-4 top-4'
                         onPress={() => setIsPasswordShow(!isPasswordShow)}
+                        disabled={isLoading}
                     >
                         <Feather
                             name={isPasswordShow ? 'eye-off' : 'eye'}
@@ -111,22 +163,24 @@ const LoginScreen = () => {
                         />
                     </TouchableOpacity>
                 </View>
-
                 <TouchableOpacity className='self-end mb-8'>
                     <Text className='text-gray-500 text-sm'>
                         Recover Password ?
                     </Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                     onPress={handleSignIn}
                     className='bg-blue-600 py-4 rounded-2xl mb-8'
+                    disabled={isLoading}
                 >
-                    <Text className='text-white text-center text-lg font-medium'>
-                        Sign In
-                    </Text>
+                    {isLoading ? (
+                        <ActivityIndicator color='white' />
+                    ) : (
+                        <Text className='text-white text-center text-lg font-medium'>
+                            Sign In
+                        </Text>
+                    )}
                 </TouchableOpacity>
-
                 <View className='flex-row items-center mb-6'>
                     <View className='flex-1 h-px bg-gray-300' />
                     <Text className='mx-4 text-gray-500 text-sm'>
@@ -134,7 +188,6 @@ const LoginScreen = () => {
                     </Text>
                     <View className='flex-1 h-px bg-gray-300' />
                 </View>
-
                 <View
                     className='flex-row justify-center mb-6'
                     style={{ gap: 24 }}
@@ -179,7 +232,6 @@ const LoginScreen = () => {
                         />
                     </TouchableOpacity>
                 </View>
-
                 <View className='items-center pb-12 px-8' style={{ zIndex: 1 }}>
                     <Text className='text-gray-600 text-sm text-center'>
                         If you don&apos;t an account you can{' '}
