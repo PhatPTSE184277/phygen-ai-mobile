@@ -8,100 +8,81 @@ import {
     RegisterScreen,
     PremiumScreen,
     GenerateScreen,
-    SummaryScreen,
+    SummaryScreen
 } from '../screens';
 import HomeTabs from './BottomTabs';
-
-import HistoryScreen from '~/screens/HistoryScreen';
-import ProfileScreen from '~/screens/ProfileScreen';
-import DashboardScreen from '~/screens/DashboardScreen';
+import HistoryScreen from '../screens/HistoryScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import DashboardScreen from '../screens/DashboardScreen';
+import { useAuthLogic } from '../utils/authLogic';
 
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
+    const { authData, isAppLoading, isTokenValid, isFirstTimeUse } =
+        useAuthLogic();
+
     return (
         <NavigationContainer>
-            <Stack.Navigator
-                initialRouteName='Splash'
-                screenOptions={{
-                    headerShown: false
-                }}
-            >
-                <Stack.Screen
-                    name='Splash'
-                    component={SplashScreen}
-                    options={{
-                        gestureEnabled: false
-                    }}
-                />
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+                {isAppLoading ? (
+                    <Stack.Screen name='Splash' component={SplashScreen} />
+                ) : !authData.token || !isTokenValid ? (
+                    <>
+                        {isFirstTimeUse && !authData.token && (
+                            <Stack.Screen
+                                name='Welcome'
+                                component={WelcomeScreen}
+                                options={{ gestureEnabled: false }}
+                            />
+                        )}
 
-                <Stack.Screen
-                    name='Welcome'
-                    component={WelcomeScreen}
-                    options={{
-                        gestureEnabled: false
-                    }}
-                />
-
-                <Stack.Screen
-                    name='Login'
-                    component={LoginScreen}
-                    options={{
-                        gestureEnabled: true
-                    }}
-                />
-
-                <Stack.Screen
-                    name='Register'
-                    component={RegisterScreen}
-                    options={{
-                        gestureEnabled: true
-                    }}
-                />
-
-                <Stack.Screen name='HomeTabs' component={HomeTabs} />
-                <Stack.Screen
-                    name='Premium'
-                    component={PremiumScreen}
-                    options={{
-                        gestureEnabled: true
-                    }}
-                />
-                <Stack.Screen
-                    name='Generate'
-                    component={GenerateScreen}
-                    options={{
-                        gestureEnabled: true
-                    }}
-                />
-                <Stack.Screen
-                    name='Summary'
-                    component={SummaryScreen}
-                    options={{
-                        gestureEnabled: true
-                    }}
-                />
-                <Stack.Screen
-                    name='Profile'
-                    component={ProfileScreen}
-                    options={{
-                        gestureEnabled: true
-                    }}
-                />
-                <Stack.Screen
-                    name='History'
-                    component={HistoryScreen}
-                    options={{
-                        gestureEnabled: true
-                    }}
-                />
-                <Stack.Screen
-                    name='Dashboard'
-                    component={DashboardScreen}
-                    options={{
-                        gestureEnabled: true
-                    }}
-                />
+                        <Stack.Screen
+                            name='Login'
+                            component={LoginScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name='Register'
+                            component={RegisterScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                    </>
+                ) : (
+                    <>
+                        <Stack.Screen name='HomeTabs' component={HomeTabs} />
+                        <Stack.Screen
+                            name='Premium'
+                            component={PremiumScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name='Generate'
+                            component={GenerateScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name='Summary'
+                            component={SummaryScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name='Profile'
+                            component={ProfileScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name='History'
+                            component={HistoryScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name='Dashboard'
+                            component={DashboardScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                    </>
+                )}
             </Stack.Navigator>
         </NavigationContainer>
     );

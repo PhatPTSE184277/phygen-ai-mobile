@@ -41,12 +41,10 @@ const SummaryScreen = () => {
     };
 
     const handleViewExam = () => {
-        // Navigate to exam view
         console.log('View Exam');
     };
 
     const handleGenerateAnswer = () => {
-        // Navigate to answer generation
         console.log('Generate Answer');
     };
 
@@ -54,7 +52,6 @@ const SummaryScreen = () => {
         <View className='flex-1 bg-gray-100 relative'>
             <StatusBar backgroundColor='#F3F4F6' barStyle='dark-content' />
 
-            {/* Background Image */}
             <View
                 className='absolute bottom-0 left-0 right-0'
                 style={{ zIndex: 0 }}
@@ -68,9 +65,7 @@ const SummaryScreen = () => {
                     }}
                     resizeMode='cover'
                 />
-            </View>
-
-        
+            </View>        
             <View
                 className='flex-row items-center mt-6 px-4 pt-12 pb-8'
                 style={{ zIndex: 1 }}
@@ -86,15 +81,11 @@ const SummaryScreen = () => {
                         style={{ marginRight: 4 }}
                     />
                 </TouchableOpacity>
-            </View>
-
-          
-            <View className='flex-1 px-6' style={{ zIndex: 1 }}>
-              
-                <Text className='text-2xl font-bold text-gray-900 mb-6'>
+                <Text className='text-2xl font-bold text-gray-900'>
                     Summary
                 </Text>
-                
+            </View>
+            <View className='flex-1 px-6' style={{ zIndex: 1 }}>
                 <View
                     className='bg-white rounded-3xl flex-1 mb-6'
                     style={{
@@ -112,7 +103,6 @@ const SummaryScreen = () => {
                         bounces={false}
                     >
                         <View className='flex-row mb-6'>
-                            {/* Exam Image */}
                             <View className='w-28 h-28 rounded-2xl mr-4 overflow-hidden'>
                                 <Image
                                     source={ev}
@@ -124,7 +114,6 @@ const SummaryScreen = () => {
                                 />
                             </View>
 
-                            {/* Exam Info */}
                             <View className='flex-1 justify-center'>
                                 <Text className='text-lg font-bold text-gray-900 mb-2'>
                                     {examData.title}
@@ -137,9 +126,7 @@ const SummaryScreen = () => {
                             </View>
                         </View>
 
-                        {/* Details Grid */}
                         <View style={{ gap: 16 }}>
-                            {/* Grade */}
                             <View className='flex-row justify-between items-center'>
                                 <Text className='text-gray-700 font-medium'>
                                     Grade:

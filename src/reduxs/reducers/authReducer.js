@@ -3,9 +3,13 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const initialState = {
     token: '',
+    expiryTime: null,
     _id: '',
     username: '',
     email: '',
+    emailVerified: false,
+    accountType: '',
+    role: '',
     isFirstTimeUse: true
 };
 
@@ -13,11 +17,10 @@ const authSlice = createSlice({
     name: 'auth',
     initialState: {
         data: initialState
-    },
-    reducers: {
+    },    reducers: {
         addAuth: (state, action) => {
-            state.data = action.payload;
-            syncLocal(action.payload);
+            state.data = { ...state.data, ...action.payload };
+            syncLocal(state.data);
         },
         removeAuth: (state, _action) => {
             state.data = initialState;
@@ -25,7 +28,7 @@ const authSlice = createSlice({
         },
         setFirstTimeUse: (state, action) => {
             state.data.isFirstTimeUse = action.payload;
-            syncLocal({...state.data, isFirstTimeUse: action.payload});
+            syncLocal(state.data);
         }
     }
 });
