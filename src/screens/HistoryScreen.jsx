@@ -10,6 +10,11 @@ import { Ionicons } from '@expo/vector-icons';
 import bg1 from '../../assets/images/bg1.png';
 import explore1 from '../../assets/images/explore1.png';
 import { useNavigation } from '@react-navigation/native';
+import { useCallback, useState } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import axiosClient from '../apis/axiosClient';
+import Toast from 'react-native-toast-message';
+import { ActivityIndicator } from 'react-native';
 
 const { width, height } = Dimensions.get('window');
 const HistoryScreen = () => {
@@ -17,6 +22,65 @@ const HistoryScreen = () => {
     const handleBack = () => {
         navigation.goBack();
     };
+    const [loading, setLoading] = useState(false);
+    const [examsData, setExamsData] = useState([]);
+
+    // định dạng thời gian đã qua kể từ ngày tạo bài thi
+    const formatTimeAgo = (isoDateString) => {
+        const now = new Date();
+        const date = new Date(isoDateString);
+        const diffMs = now - date; // chênh lệch mili giây
+        const diffSeconds = Math.floor(diffMs / 1000);
+        const diffMinutes = Math.floor(diffSeconds / 60);
+        const diffHours = Math.floor(diffMinutes / 60);
+        const diffDays = Math.floor(diffHours / 24);
+        const diffMonths = Math.floor(diffDays / 30);
+        const diffYears = Math.floor(diffDays / 365);
+
+        if (diffSeconds < 60) return `${diffSeconds} seconds ago`;
+        if (diffMinutes < 60) return `${diffMinutes} minutes ago`;
+        if (diffHours < 24) return `${diffHours} hours ago`;
+        if (diffDays < 30) return `${diffDays} days ago`;
+        if (diffMonths < 12) return `${diffMonths} months ago`;
+        return `${diffYears} years ago`;
+    };
+
+
+    const loadData = async () => {
+        try {
+            setLoading(true);
+            const response = await axiosClient.get('/api/AccountUser/me/exams');
+            if (response.data.success) {
+                setExamsData(response.data.data);
+
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'Failed to get exams data. Try again later.',
+                    position: 'top',
+                });
+            }
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Something went wrong. Try again later.',
+                position: 'top',
+            });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useFocusEffect(
+        useCallback(() => {
+            loadData();
+
+        }, [])
+    );
+
+    console.log('examsData', examsData);
 
     return (
         <>
@@ -80,22 +144,22 @@ const HistoryScreen = () => {
                             paddingBottom: 60,
                         }}
                         className='mt-6'>
-                        {Array.from({ length: 10 }).map((_, index) => (
+                        {examsData?.map((exam, index) => (
                             <View key={index} className='bg-white flex-row rounded-xl p-4 gap-6 items-center mb-4'>
                                 <View className='bg-[#FFEBF0] p-4 px-6 rounded-xl'>
                                     <Image source={explore1} className="w-10 h-10" resizeMode="contain" />
                                 </View>
                                 <View>
-                                    <Text >Dao Dong Co Hoc</Text>
+                                    <Text >{exam.examType}</Text>
                                     <View className='flex-row items-center gap-2 mt-1'>
                                         <Ionicons
                                             name="time-outline"
                                             size={14}
                                             color={"#B8B8D2"}
                                         />
-                                        <Text className='text-[#B8B8D2] font-light text-sm'> 3 days ago</Text>
+                                        <Text className='text-[#B8B8D2] font-light text-sm'> {formatTimeAgo(exam.createdAt)}</Text>
                                     </View>
-                                    <Text className='text-[#B8B8D2] font-light text-sm mt-1'> 5 questions</Text>
+                                    <Text className='text-[#B8B8D2] font-light text-sm mt-1'>{exam.questionCount} questions</Text>
                                 </View>
 
                             </View>
