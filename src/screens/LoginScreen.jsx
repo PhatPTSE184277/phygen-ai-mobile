@@ -50,6 +50,7 @@ const LoginScreen = () => {
                 identifier: email.trim(),
                 password: password
             });
+            console.log('Login response:', response.data);
 
             if (response.data.success) {
                 const expiresIn = response.data.data.expiresIn;
@@ -207,7 +208,7 @@ const LoginScreen = () => {
                         />
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity className='self-end mb-8'>
+                <TouchableOpacity onPress={() => navigation.navigate("ForgotPass")} className='self-end mb-8'>
                     <Text className='text-gray-500 text-sm'>
                         Recover Password ?
                     </Text>
