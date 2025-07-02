@@ -11,9 +11,14 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import bg1 from '../../assets/images/bg1.png';
 import googleIcon from '../../assets/images/gg.png';
+import { TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { ActivityIndicator } from 'react-native';
+import axios from 'axios';
+
 import facebookIcon from '../../assets/images/fb.png';
 import Feather from 'react-native-vector-icons/Feather';
-
+import Toast from 'react-native-toast-message';
+import axiosClient from '~/apis/axiosClient';
 const { width, height } = Dimensions.get('window');
 
 const RegisterScreen = () => {
@@ -23,9 +28,97 @@ const RegisterScreen = () => {
     const [confirmPassword, setConfirmPassword] = useState('');
     const [isPasswordShow, setIsPasswordShow] = useState(false);
     const [isConfirmPasswordShow, setIsConfirmPasswordShow] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleRegister = () => {
-        console.log('Register pressed');
+    const handleRegister = async () => {
+        // Simple validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(email)) {
+            Toast.show({
+                type: 'error',
+                text1: 'Invalid Email',
+                text2: 'Please enter a valid email address.',
+                position: 'top',
+            });
+            return;
+        }
+
+        if (password.length < 6) {
+            Toast.show({
+                type: 'error',
+                text1: 'Weak Password',
+                text2: 'Password must be at least 6 characters long.',
+                position: 'top',
+            });
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            Toast.show({
+                type: 'error',
+                text1: 'Password Mismatch',
+                text2: 'Confirm password does not match.',
+                position: 'top',
+            });
+            return;
+        }
+
+        try {
+            setIsLoading(true);
+            const response = await axiosClient.post('/api/Auth/register', {
+                email,
+                password,
+                confirmPassword
+            });
+
+            if (response.data.success) {
+                Toast.show({
+                    type: 'success',
+                    text1: 'Registration Successful',
+                    text2: 'Please check your email for verification.',
+                    position: 'top',
+                });
+
+                const res = await axios.post(
+                    'https://backend-phygen.onrender.com/api/EmailVerification/request',
+                    `"${email}"`,
+                    {
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    }
+                );
+
+                if (res.data.success) {
+                    navigation.navigate("OTPVerify", { email });
+                } else {
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Error',
+                        text2: res.data.message,
+                        position: 'top',
+                    });
+                }
+
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Registration Failed',
+                    text2: response.data.message,
+                    position: 'top',
+                });
+            }
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Something went wrong. Try again later.',
+                position: 'top',
+            });
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const handleGoBack = () => {
@@ -91,7 +184,7 @@ const RegisterScreen = () => {
                 <View className='mb-4 relative'>
                     <TextInput
                         className='bg-white px-4 py-4 rounded-2xl text-gray-700 pr-12 shadow-sm'
-                        placeholder='••••••••'
+                        placeholder='Enter Password'
                         placeholderTextColor='#9CA3AF'
                         value={password}
                         onChangeText={setPassword}
@@ -112,7 +205,7 @@ const RegisterScreen = () => {
                 <View className='mb-8 relative'>
                     <TextInput
                         className='bg-white px-4 py-4 rounded-2xl text-gray-700 pr-12 shadow-sm'
-                        placeholder='••••••••'
+                        placeholder='Confirm Password'
                         placeholderTextColor='#9CA3AF'
                         value={confirmPassword}
                         onChangeText={setConfirmPassword}
@@ -135,10 +228,15 @@ const RegisterScreen = () => {
                 <TouchableOpacity
                     onPress={handleRegister}
                     className='bg-blue-600 py-4 rounded-2xl mb-8'
+                    disabled={isLoading}
                 >
-                    <Text className='text-white text-center text-lg font-medium'>
-                        Register
-                    </Text>
+                    {isLoading ? (
+                        <ActivityIndicator color='white' />
+                    ) : (
+                        <Text className='text-white text-center text-lg font-medium'>
+                            Register
+                        </Text>
+                    )}
                 </TouchableOpacity>
 
                 <View className='flex-row items-center mb-6'>

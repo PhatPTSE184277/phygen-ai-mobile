@@ -50,6 +50,7 @@ const LoginScreen = () => {
                 identifier: email.trim(),
                 password: password
             });
+            console.log('Login response:', response.data);
 
             if (response.data.success) {
                 const expiresIn = response.data.data.expiresIn;
@@ -67,10 +68,7 @@ const LoginScreen = () => {
                     isFirstTimeUse: false
                 };
 
-                await AsyncStorage.setItem(
-                    'Auth_Data',
-                    JSON.stringify(authData)
-                );
+                await AsyncStorage.setItem('Auth_Data', JSON.stringify(authData));
                 dispatch(addAuth(authData));
                 if (isFirstTimeUse) {
                     await setFirstTimeUsed();
@@ -79,15 +77,14 @@ const LoginScreen = () => {
                 Toast.show({
                     type: 'success',
                     text1: 'Login Successful!',
-                    text2: 'Welcome back!',
+                    text2: `Welcome back, ${response.data.data.account.username}!`,
                     position: 'top'
                 });
             } else {
                 let errorMessage = 'Login failed';
 
                 if (response.data.error && Array.isArray(response.data.error)) {
-                    errorMessage =
-                        response.data.error[0] || 'Invalid credentials';
+                    errorMessage = response.data.error[0] || 'Invalid credentials';
                 } else if (response.data.message) {
                     errorMessage = response.data.message;
                 }
@@ -207,7 +204,7 @@ const LoginScreen = () => {
                         />
                     </TouchableOpacity>
                 </View>
-                <TouchableOpacity className='self-end mb-8'>
+                <TouchableOpacity onPress={() => navigation.navigate("ForgotPass")} className='self-end mb-8'>
                     <Text className='text-gray-500 text-sm'>
                         Recover Password ?
                     </Text>

@@ -15,6 +15,9 @@ import HistoryScreen from '../screens/HistoryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import { useAuthLogic } from '../utils/authLogic';
+import OTPVerify from '~/screens/OTPVerify';
+import ForgotPassScreen from '~/screens/ForgotPassScreen';
+import ResetPass from '~/screens/ResetPass';
 
 const Stack = createNativeStackNavigator();
 
@@ -45,6 +48,21 @@ const AppNavigator = () => {
                         <Stack.Screen
                             name='Register'
                             component={RegisterScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name='OTPVerify'
+                            component={OTPVerify}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name='ForgotPass'
+                            component={ForgotPassScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name='ResetPass'
+                            component={ResetPass}
                             options={{ gestureEnabled: true }}
                         />
                     </>

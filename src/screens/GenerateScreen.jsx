@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -14,63 +14,91 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import bg1 from '../../assets/images/bg1.png';
 import { StepSelector } from '~/components';
+import axiosClient from '~/apis/axiosClient';
 
 const { width, height } = Dimensions.get('window');
 
 const GenerateScreen = () => {
     const navigation = useNavigation();
     const [title, setTitle] = useState('');
-    const [selectedGrade, setSelectedGrade] = useState('10');
-    const [selectedChapters, setSelectedChapters] = useState([
-        'Design',
-        'Coding'
-    ]);
     const [selectedQuestions, setSelectedQuestions] = useState(30);
     const [selectedLevel, setSelectedLevel] = useState('Easy');
     const [selectedFormat, setSelectedFormat] = useState('Multiple Choice');
     const [selectedMatrix, setSelectedMatrix] = useState('15-minute test');
     const [selectedVariants, setSelectedVariants] = useState(4);
+    const [subjects, setSubjects] = useState([]);
+    const [selectedSubject, setSelectedSubject] = useState(null);
+    const [topics, setTopics] = useState([]);
+    const [matrices, setMatrices] = useState([]);
 
-    const grades = ['10', '11', '12'];
-    const chapters = [
-        'Design',
-        'Painting',
-        'Coding',
-        'Music',
-        'Visual identity',
-        'Mathematics',
-        'Music',
-        'Visual identity',
-        'Mathematics'
-    ];
     const levels = ['Easy', 'Medium', 'Difficult'];
     const formats = ['Multiple Choice', 'Essay'];
-    const matrices = [
-        '15-minute test',
-        'One-period test',
-        'Mid-term exam',
-        'One-period test'
-    ];
-
-    // Các mốc cố định
     const questionValues = [10, 30, 60];
     const variantValues = [1, 4, 8];
+
+    useEffect(() => {
+        const fetchSubjects = async () => {
+            try {
+                const response = await axiosClient.get('/api/subjects/active');
+                if (response.data.success) {
+                    const sortedSubjects = response.data.data.sort((a, b) => a.id - b.id);
+                    setSubjects(sortedSubjects);
+
+                    const defaultSubject = sortedSubjects[0];
+                    if (defaultSubject) {
+                        setSelectedSubject(defaultSubject);
+                        fetchTopics(defaultSubject.id);
+                    }
+                } else {
+                    console.error('Failed to fetch subjects:', response.data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching subjects:', error);
+            }
+        };
+
+        const fetchMatrices = async () => {
+            try {
+                const response = await axiosClient.get('https://backend-phygen.onrender.com/api/exam_matrixs/active');
+                if (response.data.success) {
+                    setMatrices(response.data.data);
+                } else {
+                    console.error('Failed to fetch matrices:', response.data.message);
+                }
+            } catch (error) {
+                console.error('Error fetching matrices:', error);
+            }
+        };
+
+        fetchSubjects();
+        fetchMatrices();
+    }, []);
+
+    const fetchTopics = async (subjectId) => {
+        try {
+            const response = await axiosClient.get(`/api/topics/${subjectId}`);
+            if (response.data.success) {
+                setTopics([response.data.data]);
+            } else {
+                console.error('Failed to fetch topics:', response.data.message);
+            }
+        } catch (error) {
+            console.error('Error fetching topics:', error);
+        }
+    };
 
     const handleBack = () => {
         navigation.goBack();
     };
 
-    const handleChapterSelect = (chapter) => {
-        if (selectedChapters.includes(chapter)) {
-            setSelectedChapters(selectedChapters.filter((c) => c !== chapter));
-        } else {
-            setSelectedChapters([...selectedChapters, chapter]);
-        }
-    };
-
     const handleGenerate = () => {
         console.log('Generating exam...');
         navigation.navigate('Summary');
+    };
+
+    const handleSubjectSelect = (subject) => {
+        setSelectedSubject(subject);
+        fetchTopics(subject.id);
     };
 
     return (
@@ -111,7 +139,6 @@ const GenerateScreen = () => {
                 </Text>
             </View>
             <ScrollView className='flex-1 px-6' style={{ zIndex: 1 }}>
-           
                 <View className='mb-6'>
                     <Text className='text-base font-medium text-gray-900 mb-3'>
                         Title
@@ -130,16 +157,17 @@ const GenerateScreen = () => {
                     />
                 </View>
 
+                {/* Subject */}
                 <View className='mb-6'>
                     <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Grade
+                        Subjects
                     </Text>
-                    <View className='flex-row' style={{ gap: 12 }}>
-                        {grades.map((grade) => (
+                    <View className='flex-row flex-wrap' style={{ gap: 12 }}>
+                        {subjects.map((subject) => (
                             <TouchableOpacity
-                                key={grade}
-                                onPress={() => setSelectedGrade(grade)}
-                                className={`px-6 py-3 rounded-xl ${selectedGrade === grade ? 'bg-blue-600' : 'bg-white'}`}
+                                key={subject.id}
+                                onPress={() => handleSubjectSelect(subject)}
+                                className={`px-4 py-3 rounded-xl ${selectedSubject?.id === subject.id ? 'bg-blue-600' : 'bg-white'}`}
                                 style={{
                                     shadowColor: '#000',
                                     shadowOffset: { width: 0, height: 1 },
@@ -148,37 +176,35 @@ const GenerateScreen = () => {
                                 }}
                             >
                                 <Text
-                                    className={`text-base font-medium ${selectedGrade === grade ? 'text-white' : 'text-gray-700'}`}
+                                    className={`text-sm font-medium ${selectedSubject?.id === subject.id ? 'text-white' : 'text-gray-700'}`}
                                 >
-                                    {grade}
+                                    {subject.name}
                                 </Text>
                             </TouchableOpacity>
                         ))}
                     </View>
                 </View>
 
-                {/* Chapter */}
+                {/* Topics */}
                 <View className='mb-6'>
                     <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Chapter
+                        Topics
                     </Text>
                     <View className='flex-row flex-wrap' style={{ gap: 12 }}>
-                        {chapters.map((chapter, index) => (
+                        {topics.map((topic) => (
                             <TouchableOpacity
-                                key={index}
-                                onPress={() => handleChapterSelect(chapter)}
-                                className={`px-4 py-3 rounded-xl ${selectedChapters.includes(chapter) ? 'bg-blue-600' : 'bg-white'}`}
+                                key={topic.id}
+                                onPress={() => console.log(`Selected topic: ${topic.name}`)}
+                                className={`px-4 py-3 rounded-xl bg-white`}
                                 style={{
                                     shadowColor: '#000',
                                     shadowOffset: { width: 0, height: 1 },
                                     shadowOpacity: 0.1,
-                                    shadowRadius: 2
+                                    shadowRadius: 2,
                                 }}
                             >
-                                <Text
-                                    className={`text-sm font-medium ${selectedChapters.includes(chapter) ? 'text-white' : 'text-gray-700'}`}
-                                >
-                                    {chapter}
+                                <Text className='text-sm font-medium text-gray-700'>
+                                    {topic.name}
                                 </Text>
                             </TouchableOpacity>
                         ))}
@@ -197,7 +223,6 @@ const GenerateScreen = () => {
                     />
                 </View>
 
-         
                 <View className='mb-6'>
                     <Text className='text-base font-medium text-gray-900 mb-3'>
                         Level
@@ -257,11 +282,11 @@ const GenerateScreen = () => {
                         Matrix
                     </Text>
                     <View className='flex-row flex-wrap' style={{ gap: 12 }}>
-                        {matrices.map((matrix, index) => (
+                        {matrices.map((matrix) => (
                             <TouchableOpacity
-                                key={index}
-                                onPress={() => setSelectedMatrix(matrix)}
-                                className={`px-4 py-3 rounded-xl ${selectedMatrix === matrix ? 'bg-blue-600' : 'bg-white'}`}
+                                key={matrix.id}
+                                onPress={() => setSelectedMatrix(matrix.examtype)}
+                                className={`px-4 py-3 rounded-xl ${selectedMatrix === matrix.examtype ? 'bg-blue-600' : 'bg-white'}`}
                                 style={{
                                     shadowColor: '#000',
                                     shadowOffset: { width: 0, height: 1 },
@@ -270,9 +295,9 @@ const GenerateScreen = () => {
                                 }}
                             >
                                 <Text
-                                    className={`text-sm font-medium ${selectedMatrix === matrix ? 'text-white' : 'text-gray-700'}`}
+                                    className={`text-sm font-medium ${selectedMatrix === matrix.examtype ? 'text-white' : 'text-gray-700'}`}
                                 >
-                                    {matrix}
+                                    {matrix.examtype}
                                 </Text>
                             </TouchableOpacity>
                         ))}
