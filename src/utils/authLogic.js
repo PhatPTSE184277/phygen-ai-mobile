@@ -55,7 +55,6 @@ export const useAuthLogic = () => {
   };
   const handleLogout = useCallback(async () => {
     try {
-      // Chỉ xóa Auth_Data, không xóa First_Time_Use flag
       await AsyncStorage.removeItem('Auth_Data');
       dispatch(removeAuth());
       setIsTokenValid(false);
