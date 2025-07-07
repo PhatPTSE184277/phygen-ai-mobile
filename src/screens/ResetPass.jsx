@@ -74,6 +74,8 @@ const ResetPass = () => {
                 verificationCode: code,
                 newPassword: password
             });
+            console.log(response.data);
+
             if (response.data.success) {
                 Toast.show({
                     type: 'success',

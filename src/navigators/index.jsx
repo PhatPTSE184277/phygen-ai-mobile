@@ -18,6 +18,7 @@ import { useAuthLogic } from '../utils/authLogic';
 import OTPVerify from '~/screens/OTPVerify';
 import ForgotPassScreen from '~/screens/ForgotPassScreen';
 import ResetPass from '~/screens/ResetPass';
+import VNPayPaymentScreen from '~/screens/VNPayPaymentScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -97,6 +98,11 @@ const AppNavigator = () => {
                         <Stack.Screen
                             name='Dashboard'
                             component={DashboardScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name="VNPayPayment"
+                            component={VNPayPaymentScreen}
                             options={{ gestureEnabled: true }}
                         />
                     </>

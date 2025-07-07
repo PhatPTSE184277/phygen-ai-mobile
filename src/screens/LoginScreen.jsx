@@ -50,7 +50,6 @@ const LoginScreen = () => {
                 identifier: email.trim(),
                 password: password
             });
-            console.log('Login response:', response.data);
 
             if (response.data.success) {
                 const expiresIn = response.data.data.expiresIn;
@@ -77,6 +76,7 @@ const LoginScreen = () => {
                     await setFirstTimeUsed();
                 }
 
+                navigation.navigate('HomeTabs');
                 Toast.show({
                     type: 'success',
                     text1: 'Login Successful!',

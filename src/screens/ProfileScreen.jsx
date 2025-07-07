@@ -20,7 +20,9 @@ import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import Toast from 'react-native-toast-message';
 import axiosClient from '../apis/axiosClient';
+import axios from 'axios';
 import { useAuthLogic } from '../utils/authLogic';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const defaultAvatar = require('../../assets/images/defaultAvatar.png');
 const bg1 = require('../../assets/images/bg1.png');
@@ -66,20 +68,86 @@ const ProfileScreen = () => {
     };
 
     const handleSave = async () => {
-        console.log('Form Data:', form);
-        if (avatarInfo) {
-            console.log('🖼️ Avatar Info:', avatarInfo);
-        } else {
-            console.log('🖼️ No avatar selected.');
-        }
-
         try {
             setLoadingUpdate(true);
+
+            // Upload avatar if selected
+            if (avatarInfo) {
+                try {
+                    const formData = new FormData();
+                    formData.append('File', {
+                        uri: Platform.OS === 'android' ? avatarInfo.uri : avatarInfo.uri.replace('file://', ''),
+                        name: avatarInfo.fileName,
+                        type: avatarInfo.mimeType,
+                    });
+                    let accessToken
+                    try {
+                        accessToken = await AsyncStorage.getItem('Auth_Data');
+                        if (accessToken) {
+                            const authData = JSON.parse(accessToken);
+                            if (authData && authData.token) {
+                                accessToken = authData.token;
+                            }
+                        }
+
+                    } catch (e) { }
+                    const avatarResponse = await axios.put(
+                        'https://backend-phygen.onrender.com/api/AccountUser/update-avatar',
+                        formData,
+                        {
+                            headers: {
+                                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                                Accept: 'application/json',
+                                'Content-Type': 'multipart/form-data',
+                            },
+                        }
+                    );
+
+
+                    if (avatarResponse.data !== null) {
+                        Toast.show({
+                            type: 'success',
+                            text1: 'Avatar Updated',
+                            text2: 'Your avatar has been updated successfully.',
+                            position: 'top',
+                        });
+                        setAvatarInfo(null);
+                        setForm({
+                            ...form,
+                            avatar: avatarResponse.data.avatarUrl,
+                        });
+                    } else {
+                        Toast.show({
+                            type: 'error',
+                            text1: 'Error',
+                            text2: 'Failed to update avatar. Try again later.',
+                            position: 'top',
+                        });
+                        setLoadingUpdate(false);
+                        return;
+                    }
+                } catch (avatarError) {
+
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Error',
+                        text2: 'Failed to upload avatar. Try again later.',
+                        position: 'top',
+                    });
+                    setLoadingUpdate(false);
+                    return;
+                }
+            }
+
+            // Update profile information
             const updateForm = {
+                school: form.school,
+                address: form.address,
                 username: form.username,
                 email: form.email,
                 password: form.password !== '******' ? form.password : "",
             };
+
             const response = await axiosClient.put('/api/AccountUser/me', updateForm);
             if (response.data?.success) {
                 Toast.show({
@@ -93,7 +161,7 @@ const ProfileScreen = () => {
                     ...form,
                     password: '******',
                 });
-                handleLogout();
+                setAvatarInfo(null);
             } else {
                 Toast.show({
                     type: 'error',
@@ -103,7 +171,6 @@ const ProfileScreen = () => {
                 });
             }
         } catch (error) {
-            console.error('Update error:', error);
             Toast.show({
                 type: 'error',
                 text1: 'Error',
@@ -111,6 +178,7 @@ const ProfileScreen = () => {
                 position: 'top',
             });
         } finally {
+
             setLoadingUpdate(false);
         }
     };
@@ -129,6 +197,9 @@ const ProfileScreen = () => {
                     email: data.email || '',
                     membership: data.accountType || '',
                     password: '******',
+                    avatar: data.avatarUrl || '',
+                    school: data.school || "",
+                    address: data.address || "",
                 });
             } else {
                 Toast.show({
@@ -205,7 +276,7 @@ const ProfileScreen = () => {
                         <View className="items-center mb-8">
                             <View className="w-36 h-36 rounded-full bg-white justify-center items-center shadow-md relative">
                                 <Image
-                                    source={avatarInfo?.uri ? { uri: avatarInfo.uri } : defaultAvatar}
+                                    source={avatarInfo ? { uri: avatarInfo.uri } : (form.avatar ? { uri: form.avatar } : defaultAvatar)}
                                     className="w-32 h-32 rounded-full"
                                     resizeMode="cover"
                                 />
@@ -232,21 +303,16 @@ const ProfileScreen = () => {
                                         onChangeText={(text) => setForm({ ...form, username: text })}
                                         placeholder="User Name"
                                         returnKeyType="next"
-                                        onSubmitEditing={() => emailRef.current.focus()}
+                                        onSubmitEditing={() => passwordRef.current.focus()}
                                         blurOnSubmit={false}
                                         className="bg-gray-100 px-4 py-2 rounded-md mb-6"
                                     />
 
                                     <Text className="text-sm text-gray-500 mb-2">Email Address</Text>
                                     <TextInput
-                                        ref={emailRef}
                                         value={form.email}
-                                        onChangeText={(text) => setForm({ ...form, email: text })}
-                                        placeholder="Email"
-                                        returnKeyType="next"
-                                        onSubmitEditing={() => passwordRef.current.focus()}
-                                        blurOnSubmit={false}
-                                        className="bg-gray-100 px-4 py-2 rounded-md mb-6"
+                                        editable={false}
+                                        className="bg-gray-100 px-4 py-2 rounded-md mb-6 text-gray-400"
                                     />
 
                                     <Text className="text-sm text-gray-500 mb-2">Membership</Text>

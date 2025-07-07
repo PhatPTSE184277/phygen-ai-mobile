@@ -102,10 +102,9 @@ const HomeScreen = () => {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const jsonValue = await AsyncStorage.getItem('Auth_Data');
-                if (jsonValue != null) {
-                    const parsed = JSON.parse(jsonValue);
-                    setUser(parsed);
+                const response = await axiosClient.get('/api/AccountUser/me');
+                if (response.data.success) {
+                    setUser(response.data.data);
                 } else {
                     Toast.show({
                         type: 'error',
@@ -129,7 +128,7 @@ const HomeScreen = () => {
         fetchUser();
     }, []);
 
-
+    console.log(user)
     return (
         <>
             <ScrollView className="flex-1 bg-gray-100 relative"  >
@@ -172,7 +171,7 @@ const HomeScreen = () => {
                         <Text className="text-lg font-light text-white">Let&apos;s start create exam</Text>
                     </View>
                     <Image
-                        source={defaultAvatar}
+                        source={user?.avatarUrl ? { uri: user.avatarUrl } : defaultAvatar}
                         className="w-24 h-24 rounded-full border-2 border-white "
                     />
                 </LinearGradient>

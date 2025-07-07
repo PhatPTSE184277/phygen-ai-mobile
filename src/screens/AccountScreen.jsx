@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
-import React from 'react';
-import { useState } from 'react';
+import React, { use, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import {
     ScrollView,
     Image,
@@ -13,14 +13,17 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import bg1 from '../../assets/images/bg1.png';
 import defaultAvatar from '../../assets/images/defaultAvatar.png';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuthLogic } from '../utils/authLogic';
 const { width, height } = Dimensions.get('window');
+
+import axiosClient from '../apis/axiosClient';
+import Toast from 'react-native-toast-message';
 
 const AccountScreen = () => {
     const navigation = useNavigation();
     const { handleLogout } = useAuthLogic();
-
+    const [user, setUser] = useState(null);
     const handleMenuPress = (label) => {
         switch (label) {
             case 'Dashboard':
@@ -40,6 +43,40 @@ const AccountScreen = () => {
         }
     };
 
+    const fetchUser = async () => {
+        try {
+            const response = await axiosClient.get('/api/AccountUser/me');
+            if (response.data.success) {
+                setUser(response.data.data);
+            } else {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Error',
+                    text2: 'Failed while get user data. Please try again later.',
+                    position: 'top'
+                });
+            }
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Error',
+                text2: 'Something went wrong. Please try again later.',
+                position: 'top'
+            });
+
+        }
+    };
+
+    useEffect(() => {
+        fetchUser();
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchUser();
+
+        }, [])
+    );
 
 
     return (
@@ -81,21 +118,15 @@ const AccountScreen = () => {
                         <View className='absolute top-16'>
                             <View className='w-24 h-24 rounded-full bg-white justify-center items-center shadow-md relative'>
                                 <Image
-                                    source={defaultAvatar}
+                                    source={user?.avatarUrl ? { uri: user.avatarUrl } : defaultAvatar}
                                     className='w-20 h-20 rounded-full'
                                     resizeMode='cover'
                                 />
-                                <TouchableOpacity className='absolute bottom-0 right-1 bg-white p-1 rounded-full'>
-                                    <Ionicons
-                                        name='camera'
-                                        size={16}
-                                        color='#7C4DFF'
-                                    />
-                                </TouchableOpacity>
+
                             </View>
                         </View>
                     </View>
-                    <View className='bg-white rounded-2xl p-4 mb-6 shadow-md border border-[#E2E8F0]'>
+                    {user?.accountType !== 'premium' && (<View className='bg-white rounded-2xl p-4 mb-6 shadow-md border border-[#E2E8F0]'>
                         <View className='flex-row justify-between items-center mb-2'>
                             <Text className='font-semibold text-lg text-[#333]'>
                                 Unlock all features with{'\n '}
@@ -120,7 +151,7 @@ const AccountScreen = () => {
                                 TRY NOW
                             </Text>
                         </TouchableOpacity>
-                    </View>
+                    </View>)}
                     <View className='px-4'>
                         {['Dashboard', 'My Profile', 'Generate', 'History'].map(
                             (label, index) => (
