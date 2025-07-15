@@ -1,0 +1,138 @@
+import React from 'react';
+import {
+    View,
+    Text,
+    TouchableOpacity,
+    ScrollView,
+    Dimensions,
+    StatusBar,
+    Image
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useRoute } from '@react-navigation/native';
+import bg1 from '../../assets/images/bg1.png';
+
+const { width, height } = Dimensions.get('window');
+
+const OverviewScreen = ({ navigation }) => {
+    const route = useRoute();
+    const examResult = route.params?.examResult;
+    console.log(examResult)
+
+    return (
+        <View className='flex-1 bg-gray-100 relative'>
+            <StatusBar backgroundColor='#F3F4F6' barStyle='dark-content' />
+            <View
+                className='absolute bottom-0 left-0 right-0'
+                style={{ zIndex: 0 }}
+            >
+                <Image
+                    source={bg1}
+                    style={{
+                        width: width,
+                        height: height * 0.8,
+                        transform: [{ translateY: -height * 0 }]
+                    }}
+                    resizeMode='cover'
+                />
+            </View>
+            <View className='flex-row items-center mt-6 px-4 pt-12 pb-8' style={{ zIndex: 1 }}>
+                <TouchableOpacity
+                    onPress={() => navigation.goBack()}
+                    className='flex-row items-center p-3'
+                >
+                    <Ionicons
+                        name='chevron-back-outline'
+                        size={28}
+                        color='#3B82F6'
+                        style={{ marginRight: 4 }}
+                    />
+                </TouchableOpacity>
+                <Text className='text-2xl font-bold text-gray-900'>
+                    Overview
+                </Text>
+            </View>
+            <View className='flex-1 px-6' style={{ zIndex: 1 }}>
+                <ScrollView
+                    style={{ flex: 1 }}
+                    contentContainerStyle={{ paddingBottom: 100 }}
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View
+                        className='bg-white rounded-3xl mb-6'
+                        style={{
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 4 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 12,
+                            elevation: 8,
+                            padding: 16,
+                            alignSelf: 'flex-start',
+                            width: '100%'
+                        }}
+                    >
+                        <Text className='text-lg font-bold text-gray-900 mb-4'>
+                            {examResult?.message || 'Exam Overview'}
+                        </Text>
+                        <View
+                            style={{
+                                gap: 16,
+                                width: '100%'
+                            }}
+                        >
+                            {examResult?.data?.generatedExams?.map((exam, idx) => (
+                                <TouchableOpacity
+                                    key={idx}
+                                    className='bg-gray-100 rounded-2xl px-4 py-4 flex-row justify-between items-center mb-2'
+                                    activeOpacity={0.8}
+                                    // Truyền dữ liệu sang ExamDetailScreen
+                                    onPress={() => navigation.navigate('ExamDetail', { exam: { ...exam, examId: examResult.data.examId } })}
+                                    style={{
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 1 },
+                                        shadowOpacity: 0.08,
+                                        shadowRadius: 2
+                                    }}
+                                >
+                                    <View>
+                                        <Text className='text-base font-bold text-gray-900 mb-1'>
+                                            {exam.examCode}
+                                        </Text>
+                                        <Text className='text-sm text-gray-500'>
+                                            Tap to view detail
+                                        </Text>
+                                    </View>
+                                    <Ionicons
+                                        name='chevron-forward-outline'
+                                        size={22}
+                                        color='#3B82F6'
+                                    />
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+                </ScrollView>
+                <View
+                    style={{
+                        position: 'absolute',
+                        left: 24,
+                        right: 24,
+                        bottom: 24
+                    }}
+                >
+                    <TouchableOpacity
+                        className='bg-blue-500 rounded-xl py-4 items-center'
+                        activeOpacity={0.8}
+                        onPress={() => navigation.navigate('HomeTabs')}
+                    >
+                        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+                            Finish
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </View>
+    );
+};
+
+export default OverviewScreen;

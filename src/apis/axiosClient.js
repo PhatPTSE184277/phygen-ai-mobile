@@ -23,7 +23,7 @@ const getAccessToken = async () => {
 
 const axiosClient = axios.create({
     baseURL,
-    timeout: 3000,
+    timeout: 30000,
     paramsSerializer: (params) => queryString.stringify(params)
 });
 

@@ -9,32 +9,29 @@ import {
     ScrollView,
     TextInput
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import bg1 from '../../assets/images/bg1.png';
-import { StepSelector } from '~/components';
-import axiosClient from '~/apis/axiosClient';
+import axiosClient from '../apis/axiosClient';
+import axiosClient2 from '../apis/axiosClient2';
+import { StepSelector } from '../components/index';
+import MatrixLabels from '../constants/MatrixLabels';
 
 const { width, height } = Dimensions.get('window');
 
 const GenerateScreen = () => {
     const navigation = useNavigation();
     const [title, setTitle] = useState('');
-    const [selectedQuestions, setSelectedQuestions] = useState(30);
-    const [selectedLevel, setSelectedLevel] = useState('Easy');
-    const [selectedFormat, setSelectedFormat] = useState('Multiple Choice');
+    const [selectedLevel, setSelectedLevel] = useState('easy');
     const [selectedMatrix, setSelectedMatrix] = useState('15-minute test');
-    const [selectedVariants, setSelectedVariants] = useState(4);
+    const [selectedVariants, setSelectedVariants] = useState(1);
     const [subjects, setSubjects] = useState([]);
     const [selectedSubject, setSelectedSubject] = useState(null);
-    const [topics, setTopics] = useState([]);
     const [matrices, setMatrices] = useState([]);
+    const [levels, setLevels] = useState([]);
+    const [error, setError] = useState('');
 
-    const levels = ['Easy', 'Medium', 'Difficult'];
-    const formats = ['Multiple Choice', 'Essay'];
-    const questionValues = [10, 30, 60];
-    const variantValues = [1, 4, 8];
+    const variantValues = [1, 2, 3, 4];
 
     useEffect(() => {
         const fetchSubjects = async () => {
@@ -47,7 +44,6 @@ const GenerateScreen = () => {
                     const defaultSubject = sortedSubjects[0];
                     if (defaultSubject) {
                         setSelectedSubject(defaultSubject);
-                        fetchTopics(defaultSubject.id);
                     }
                 } else {
                     console.error('Failed to fetch subjects:', response.data.message);
@@ -57,11 +53,33 @@ const GenerateScreen = () => {
             }
         };
 
-        const fetchMatrices = async () => {
+        const fetchLevels = async () => {
             try {
-                const response = await axiosClient.get('https://backend-phygen.onrender.com/api/exam_matrixs/active');
+                const response = await axiosClient2.get('/api/matrixDetail/difficultyLevel');
+                if (response.data.success) {
+                    setLevels(response.data.data);
+                }
+            } catch (error) {
+                console.error('Error fetching levels:', error);
+            }
+        };
+
+        fetchSubjects();
+        fetchLevels();
+    }, []);
+
+    useEffect(() => {
+        const fetchMatrices = async () => {
+            if (!selectedSubject) return;
+            try {
+                const response = await axiosClient2.get(
+                    `/api/examMatrix/subject/${selectedSubject.id}`
+                );
                 if (response.data.success) {
                     setMatrices(response.data.data);
+                    if (response.data.data.length > 0) {
+                        setSelectedMatrix(response.data.data[0].examType);
+                    }
                 } else {
                     console.error('Failed to fetch matrices:', response.data.message);
                 }
@@ -70,35 +88,32 @@ const GenerateScreen = () => {
             }
         };
 
-        fetchSubjects();
         fetchMatrices();
-    }, []);
-
-    const fetchTopics = async (subjectId) => {
-        try {
-            const response = await axiosClient.get(`/api/topics/${subjectId}`);
-            if (response.data.success) {
-                setTopics([response.data.data]);
-            } else {
-                console.error('Failed to fetch topics:', response.data.message);
-            }
-        } catch (error) {
-            console.error('Error fetching topics:', error);
-        }
-    };
+    }, [selectedSubject]);
 
     const handleBack = () => {
         navigation.goBack();
     };
 
-    const handleGenerate = () => {
-        console.log('Generating exam...');
-        navigation.navigate('Summary');
+    const handleConfirm = () => {
+        if (!title || !selectedSubject || !selectedMatrix || !selectedLevel || !selectedVariants) {
+            setError('Please fill in all required fields!');
+            return;
+        }
+        setError('');
+        const payload = {
+            title,
+            subjectId: selectedSubject?.id,
+            subjectName: selectedSubject?.name,
+            examType: selectedMatrix,
+            difficultyLevel: selectedLevel,
+            examQuantity: String(selectedVariants)
+        };
+        navigation.navigate('Summary', { examPreview: payload });
     };
 
     const handleSubjectSelect = (subject) => {
         setSelectedSubject(subject);
-        fetchTopics(subject.id);
     };
 
     return (
@@ -145,16 +160,26 @@ const GenerateScreen = () => {
                     </Text>
                     <TextInput
                         value={title}
-                        onChangeText={setTitle}
+                        onChangeText={text => {
+                            setTitle(text);
+                            if (error) setError('');
+                        }}
                         placeholder='Enter Exam Title'
                         className='bg-white rounded-xl px-4 py-4 text-base text-gray-900'
                         style={{
+                            borderColor: error ? 'red' : '#fff',
+                            borderWidth: error ? 1.5 : 0,
                             shadowColor: '#000',
                             shadowOffset: { width: 0, height: 1 },
                             shadowOpacity: 0.1,
                             shadowRadius: 2
                         }}
                     />
+                    {error ? (
+                        <Text style={{ color: 'red', marginTop: 6, marginLeft: 4, fontSize: 14 }}>
+                            {error}
+                        </Text>
+                    ) : null}
                 </View>
 
                 {/* Subject */}
@@ -183,44 +208,6 @@ const GenerateScreen = () => {
                             </TouchableOpacity>
                         ))}
                     </View>
-                </View>
-
-                {/* Topics */}
-                <View className='mb-6'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Topics
-                    </Text>
-                    <View className='flex-row flex-wrap' style={{ gap: 12 }}>
-                        {topics.map((topic) => (
-                            <TouchableOpacity
-                                key={topic.id}
-                                onPress={() => console.log(`Selected topic: ${topic.name}`)}
-                                className={`px-4 py-3 rounded-xl bg-white`}
-                                style={{
-                                    shadowColor: '#000',
-                                    shadowOffset: { width: 0, height: 1 },
-                                    shadowOpacity: 0.1,
-                                    shadowRadius: 2,
-                                }}
-                            >
-                                <Text className='text-sm font-medium text-gray-700'>
-                                    {topic.name}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-
-                {/* Questions */}
-                <View className='mb-6'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Questions
-                    </Text>
-                    <StepSelector
-                        values={questionValues}
-                        selectedValue={selectedQuestions}
-                        onValueChange={setSelectedQuestions}
-                    />
                 </View>
 
                 <View className='mb-6'>
@@ -252,41 +239,14 @@ const GenerateScreen = () => {
 
                 <View className='mb-6'>
                     <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Format
-                    </Text>
-                    <View className='flex-row' style={{ gap: 12 }}>
-                        {formats.map((format) => (
-                            <TouchableOpacity
-                                key={format}
-                                onPress={() => setSelectedFormat(format)}
-                                className={`px-6 py-3 rounded-xl ${selectedFormat === format ? 'bg-blue-600' : 'bg-white'}`}
-                                style={{
-                                    shadowColor: '#000',
-                                    shadowOffset: { width: 0, height: 1 },
-                                    shadowOpacity: 0.1,
-                                    shadowRadius: 2
-                                }}
-                            >
-                                <Text
-                                    className={`text-base font-medium ${selectedFormat === format ? 'text-white' : 'text-gray-700'}`}
-                                >
-                                    {format}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
-
-                <View className='mb-6'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
                         Matrix
                     </Text>
                     <View className='flex-row flex-wrap' style={{ gap: 12 }}>
-                        {matrices.map((matrix) => (
+                        {[...new Set(matrices.map(m => m.examType || m.examtype))].map((examType, idx) => (
                             <TouchableOpacity
-                                key={matrix.id}
-                                onPress={() => setSelectedMatrix(matrix.examtype)}
-                                className={`px-4 py-3 rounded-xl ${selectedMatrix === matrix.examtype ? 'bg-blue-600' : 'bg-white'}`}
+                                key={examType + idx}
+                                onPress={() => setSelectedMatrix(examType)}
+                                className={`px-4 py-3 rounded-xl ${selectedMatrix === examType ? 'bg-blue-600' : 'bg-white'}`}
                                 style={{
                                     shadowColor: '#000',
                                     shadowOffset: { width: 0, height: 1 },
@@ -295,9 +255,9 @@ const GenerateScreen = () => {
                                 }}
                             >
                                 <Text
-                                    className={`text-sm font-medium ${selectedMatrix === matrix.examtype ? 'text-white' : 'text-gray-700'}`}
+                                    className={`text-sm font-medium ${selectedMatrix === examType ? 'text-white' : 'text-gray-700'}`}
                                 >
-                                    {matrix.examtype}
+                                    {MatrixLabels[examType] || examType}
                                 </Text>
                             </TouchableOpacity>
                         ))}
@@ -316,11 +276,11 @@ const GenerateScreen = () => {
                 </View>
 
                 <TouchableOpacity
-                    onPress={handleGenerate}
+                    onPress={handleConfirm}
                     className='bg-blue-600 py-4 rounded-2xl mb-12 flex-row items-center justify-center'
                 >
                     <Text className='text-white text-center text-lg font-medium mr-2'>
-                        GENERATE
+                        CONFIRM
                     </Text>
                     <Ionicons
                         name='chevron-forward-outline'

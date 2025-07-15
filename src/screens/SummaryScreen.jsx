@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -6,52 +6,54 @@ import {
     Dimensions,
     StatusBar,
     Image,
-    ScrollView
+    ScrollView,
+    ActivityIndicator
 } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import bg1 from '../../assets/images/bg1.png';
 import ev from '../../assets/images/examreview.png';
+import MatrixLabels from '../constants/MatrixLabels';
+import axiosClient2 from '../apis/axiosClient2';
 
 const { width, height } = Dimensions.get('window');
 
 const SummaryScreen = () => {
     const navigation = useNavigation();
-
-    // Mock data từ GenerateScreen
-    const examData = {
-        title: 'Dao dong co hoc',
-        grade: '11',
-        chapters: [
-            'Lorem',
-            'Dao dong co hoc',
-            'Song',
-            'Quang',
-            'Tan so'
-        ],
-        questions: 11,
-        level: 'Difficult',
-        format: 'Multiple Choice',
-        matrix: '15 minutes'
-    };
+    const route = useRoute();
+    const examData = route.params?.examPreview || {};
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    console.log(examData)
 
     const handleBack = () => {
         navigation.goBack();
     };
 
-    const handleViewExam = () => {
-        console.log('View Exam');
-    };
-
-    const handleGenerateAnswer = () => {
-        console.log('Generate Answer');
+    const handleGenerate = async () => {
+        setError('');
+        setLoading(true);
+        try {
+            const payload = {
+                subjectId: examData.subjectId,
+                examType: examData.examType,
+                difficultyLevel: examData.difficultyLevel,
+                examQuantity: examData.examQuantity
+            };
+            const res = await axiosClient2.post('/api/exam', payload);
+            if (res.data && res.data.success) {
+                navigation.navigate('Overview', { examResult: res.data });
+            }
+        } catch (err) {
+            console.log('Error generate exam:', err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
         <View className='flex-1 bg-gray-100 relative'>
             <StatusBar backgroundColor='#F3F4F6' barStyle='dark-content' />
-
             <View
                 className='absolute bottom-0 left-0 right-0'
                 style={{ zIndex: 0 }}
@@ -65,7 +67,7 @@ const SummaryScreen = () => {
                     }}
                     resizeMode='cover'
                 />
-            </View>        
+            </View>
             <View
                 className='flex-row items-center mt-6 px-4 pt-12 pb-8'
                 style={{ zIndex: 1 }}
@@ -113,103 +115,73 @@ const SummaryScreen = () => {
                                     resizeMode='cover'
                                 />
                             </View>
-
                             <View className='flex-1 justify-center'>
                                 <Text className='text-lg font-bold text-gray-900 mb-2'>
-                                    {examData.title}
+                                    {examData.title || 'No Title'}
                                 </Text>
-                                <TouchableOpacity onPress={handleViewExam}>
-                                    <Text className='text-blue-600 font-medium'>
-                                        View Exam
-                                    </Text>
-                                </TouchableOpacity>
                             </View>
                         </View>
-
                         <View style={{ gap: 16 }}>
                             <View className='flex-row justify-between items-center'>
                                 <Text className='text-gray-700 font-medium'>
-                                    Grade:
+                                    Subject:
                                 </Text>
                                 <Text className='text-gray-400 font-normal'>
-                                    {examData.grade}
+                                    {examData.subjectName || '-'}
                                 </Text>
                             </View>
-
-                            {/* Chapter */}
-                            <View className='flex-row justify-between items-start'>
-                                <Text className='text-gray-700 font-medium'>
-                                    Chapter:
-                                </Text>
-                                <View className='flex-1 ml-4'>
-                                    {examData.chapters.map((chapter, index) => (
-                                        <Text
-                                            key={index}
-                                            className='text-gray-400 text-right text-sm'
-                                            style={{
-                                                lineHeight: 16,
-                                                marginBottom: 2
-                                            }}
-                                        >
-                                            {chapter}
-                                        </Text>
-                                    ))}
-                                </View>
-                            </View>
-
-                            <View className='flex-row justify-between items-center'>
-                                <Text className='text-gray-700 font-medium'>
-                                    Question:
-                                </Text>
-                                <Text className='text-gray-400 font-normal'>
-                                    {examData.questions}
-                                </Text>
-                            </View>
-
-                            <View className='flex-row justify-between items-center'>
-                                <Text className='text-gray-700 font-medium'>
-                                    Level:
-                                </Text>
-                                <Text className='text-gray-400 font-normal'>
-                                    {examData.level}
-                                </Text>
-                            </View>
-
-                            <View className='flex-row justify-between items-center'>
-                                <Text className='text-gray-700 font-medium'>
-                                    Format:
-                                </Text>
-                                <Text className='text-gray-400 font-normal'>
-                                    {examData.format}
-                                </Text>
-                            </View>
-
                             <View className='flex-row justify-between items-center'>
                                 <Text className='text-gray-700 font-medium'>
                                     Matrix:
                                 </Text>
                                 <Text className='text-gray-400 font-normal'>
-                                    {examData.matrix}
+                                    {MatrixLabels[examData.examType] || examData.examType || '-'}
+                                </Text>
+                            </View>
+                            <View className='flex-row justify-between items-center'>
+                                <Text className='text-gray-700 font-medium'>
+                                    Level:
+                                </Text>
+                                <Text className='text-gray-400 font-normal'>
+                                    {examData.difficultyLevel || '-'}
+                                </Text>
+                            </View>
+                            <View className='flex-row justify-between items-center'>
+                                <Text className='text-gray-700 font-medium'>
+                                    Variants:
+                                </Text>
+                                <Text className='text-gray-400 font-normal'>
+                                    {examData.examQuantity || '-'}
                                 </Text>
                             </View>
                         </View>
+                        {error ? (
+                            <Text style={{ color: 'red', marginTop: 16, textAlign: 'center' }}>
+                                {error}
+                            </Text>
+                        ) : null}
                     </ScrollView>
                 </View>
-                
-
                 <View className='pb-8'>
                     <TouchableOpacity
-                        onPress={handleGenerateAnswer}
+                        onPress={handleGenerate}
                         className='bg-blue-600 py-4 rounded-2xl flex-row items-center justify-center'
+                        disabled={loading}
                     >
-                        <Text className='text-white text-center text-lg font-medium mr-2'>
-                            GENERATE ANSWER
-                        </Text>
-                        <Ionicons
-                            name='chevron-forward-outline'
-                            size={20}
-                            color='white'
-                        />
+                        {loading ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <>
+                                <Text className='text-white text-center text-lg font-medium mr-2'>
+                                    GENERATE
+                                </Text>
+                                <Ionicons
+                                    name='chevron-forward-outline'
+                                    size={20}
+                                    color='white'
+                                />
+                            </>
+                        )}
                     </TouchableOpacity>
                 </View>
             </View>
