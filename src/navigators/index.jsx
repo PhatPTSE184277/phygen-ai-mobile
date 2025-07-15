@@ -8,7 +8,9 @@ import {
     RegisterScreen,
     PremiumScreen,
     GenerateScreen,
-    SummaryScreen
+    SummaryScreen,
+    OverviewScreen,
+    ExamDetailScreen
 } from '../screens';
 import HomeTabs from './BottomTabs';
 import HistoryScreen from '../screens/HistoryScreen';
@@ -79,9 +81,19 @@ const AppNavigator = () => {
                             component={GenerateScreen}
                             options={{ gestureEnabled: true }}
                         />
-                        <Stack.Screen
+                           <Stack.Screen
                             name='Summary'
                             component={SummaryScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                         <Stack.Screen
+                            name='Overview'
+                            component={OverviewScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                         <Stack.Screen
+                            name='ExamDetail'
+                            component={ExamDetailScreen}
                             options={{ gestureEnabled: true }}
                         />
                         <Stack.Screen

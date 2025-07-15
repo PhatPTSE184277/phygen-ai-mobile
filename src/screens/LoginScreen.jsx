@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -9,11 +9,11 @@ import {
     StatusBar,
     ActivityIndicator
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
+import { CommonActions, useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosClient from '../apis/axiosClient';
-import { addAuth } from '../reduxs/reducers/authReducer';
+import { addAuth, authSelector } from '../reduxs/reducers/authReducer';
 import { useAuthLogic } from '../utils/authLogic';
 import Toast from 'react-native-toast-message';
 import bg1 from '../../assets/images/bg1.png';
@@ -32,6 +32,17 @@ const LoginScreen = () => {
     const [password, setPassword] = useState('');
     const [isPasswordShow, setIsPasswordShow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const authData = useSelector(authSelector);
+
+    useEffect(() => {
+        if (authData.token) {
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'HomeTabs' }]
+            });
+        }
+    }, [authData.token]);
+
     const handleLogin = async () => {
         if (!email || !password) {
             Toast.show({
@@ -78,21 +89,6 @@ const LoginScreen = () => {
                     type: 'success',
                     text1: 'Login Successful!',
                     text2: `Welcome back, ${response.data.data.account.username}!`,
-                    position: 'top'
-                });
-            } else {
-                let errorMessage = 'Login failed';
-
-                if (response.data.error && Array.isArray(response.data.error)) {
-                    errorMessage = response.data.error[0] || 'Invalid credentials';
-                } else if (response.data.message) {
-                    errorMessage = response.data.message;
-                }
-
-                Toast.show({
-                    type: 'error',
-                    text1: 'Login Failed',
-                    text2: errorMessage,
                     position: 'top'
                 });
             }
