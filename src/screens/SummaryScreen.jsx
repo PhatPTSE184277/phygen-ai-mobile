@@ -40,7 +40,7 @@ const SummaryScreen = () => {
                 difficultyLevel: examData.difficultyLevel,
                 examQuantity: examData.examQuantity
             };
-            const res = await axiosClient2.post('/api/exam', payload);
+            const res = await axiosClient2.post('/api/exams', payload);
             if (res.data && res.data.success) {
                 navigation.navigate('Overview', { examResult: res.data });
             }

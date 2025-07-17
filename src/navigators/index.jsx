@@ -10,7 +10,8 @@ import {
     GenerateScreen,
     SummaryScreen,
     OverviewScreen,
-    ExamDetailScreen
+    ExamDetailScreen,
+    ExamVersionScreen
 } from '../screens';
 import HomeTabs from './BottomTabs';
 import HistoryScreen from '../screens/HistoryScreen';
@@ -94,6 +95,11 @@ const AppNavigator = () => {
                          <Stack.Screen
                             name='ExamDetail'
                             component={ExamDetailScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                         <Stack.Screen
+                            name='ExamVersion'
+                            component={ExamVersionScreen}
                             options={{ gestureEnabled: true }}
                         />
                         <Stack.Screen

@@ -25,14 +25,12 @@ const axiosClient2 = axios.create({
   paramsSerializer: (params) => queryString.stringify(params),
 });
 
-// KHÔNG set Content-Type ở đây
 axiosClient2.interceptors.request.use(async (config) => {
   const token = await getAccessToken();
-  config.headers = {
-    Authorization: token ? `Bearer ${token}` : '',
-    Accept: 'application/json',
-    ...config.headers,
-  };
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  config.headers.Accept = 'application/json';
   return config;
 });
 
