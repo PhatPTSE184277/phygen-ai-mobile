@@ -1,10 +1,10 @@
-import { Text, View, ScrollView, Image, Dimensions, TextInput, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
+import { Text, View, FlatList, Image, Dimensions, TextInput, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import bg1 from '../../assets/images/bg1.png';
 import explore1 from '../../assets/images/explore1.png';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
-import axiosClient2 from '../apis/axiosClient2'; // dùng axiosClient2 cho API mới
+import axiosClient2 from '../apis/axiosClient2';
 import Toast from 'react-native-toast-message';
 
 const { width, height } = Dimensions.get('window');
@@ -17,6 +17,7 @@ const HistoryScreen = () => {
     const [examsData, setExamsData] = useState([]);
     const [page, setPage] = useState(0);
     const [size] = useState(10);
+    const [totalPages, setTotalPages] = useState(1);
 
     // Định dạng thời gian đã qua
     const formatTimeAgo = (isoDateString) => {
@@ -39,24 +40,17 @@ const HistoryScreen = () => {
         return `${diffYears} years ago`;
     };
 
-    // Load dữ liệu từ API mới
-    const loadData = async () => {
+    const loadData = async (nextPage = 0, append = false) => {
+        setLoading(true);
         try {
-            setLoading(true);
             const response = await axiosClient2.get(
-                `/api/exam/getAllExamFromCurrentAccount?page=${page}&size=${size}&sortBy=id&sortDir=desc`
+                `/api/exams/my?page=${nextPage}&size=${size}&sortBy=id&sortDir=desc`
             );
             if (response.data && response.data.data && Array.isArray(response.data.data.content)) {
                 setExamsData(response.data.data.content);
-            } else {
-                Toast.show({
-                    type: 'error',
-                    text1: 'Error',
-                    text2: 'Failed to get exams data. Try again later.',
-                    position: 'top',
-                });
+                setTotalPages(response.data.data.totalPages || 1);
             }
-        } catch (error) {
+        } catch (_error) {
             Toast.show({
                 type: 'error',
                 text1: 'Error',
@@ -70,9 +64,11 @@ const HistoryScreen = () => {
 
     useFocusEffect(
         useCallback(() => {
-            loadData();
+            loadData(page, false);
         }, [page])
     );
+
+    // handleLoadMore is unused in classic paging, removed
 
     return (
         <View className="flex-1 bg-gray-100 relative">
@@ -117,42 +113,90 @@ const HistoryScreen = () => {
                     </View>
                 </View>
                 {loading ? (
-                    <ActivityIndicator size="large" color="#3B82F6" style={{ marginTop: 32 }} />
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <ActivityIndicator size="large" color="#3B82F6" className="mt-4 p-10" />
+                    </View>
                 ) : (
-                    <ScrollView
-                        showsVerticalScrollIndicator={false}
-                        contentContainerStyle={{ paddingBottom: 60 }}
-                        className='mt-6'
-                    >
-                        {examsData?.map((exam, index) => (
-                            <View key={index} className='bg-white flex-row rounded-xl p-4 gap-6 items-center mb-4'>
-                                <View className='bg-[#FFEBF0] p-4 px-6 rounded-xl'>
-                                    <Image source={explore1} className="w-10 h-10" resizeMode="contain" />
-                                </View>
-                                <View>
-                                    <Text style={{ fontWeight: 'bold', fontSize: 16 }}>{exam.examType}</Text>
-                                    <View className='flex-row items-center gap-2 mt-1'>
-                                        <Ionicons
-                                            name="time-outline"
-                                            size={14}
-                                            color={"#B8B8D2"}
-                                        />
-                                        <Text className='text-[#B8B8D2] font-light text-sm'>
-                                            {formatTimeAgo(exam.createAt)}
-                                        </Text>
+                    <>
+                        <FlatList
+                            data={examsData}
+                            keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+                            renderItem={({ item }) => (
+                                <TouchableOpacity
+                                    activeOpacity={0.85}
+                                    onPress={() => navigation.navigate('ExamVersion', { examId: item.id })}
+                                >
+                                    <View className='bg-white flex-row rounded-xl p-4 gap-6 items-center mb-4'>
+                                        <View className='bg-[#FFEBF0] p-4 px-6 rounded-xl'>
+                                            <Image source={explore1} className="w-10 h-10" resizeMode="contain" />
+                                        </View>
+                                        <View>
+                                            {/* ID nổi bật */}
+                                            <Text style={{
+                                                fontWeight: 'bold',
+                                                fontSize: 18,
+                                                color: '#2563EB',
+                                                marginBottom: 2,
+                                            }}>
+                                                #{item.id}
+                                            </Text>
+                                            {/* examType nhỏ, phụ */}
+                                            <Text style={{
+                                                color: '#B8B8D2',
+                                                fontSize: 14,
+                                                marginBottom: 4,
+                                            }}>
+                                                {item.examType}
+                                            </Text>
+                                            <View className='flex-row items-center gap-2 mt-1'>
+                                                <Ionicons
+                                                    name="time-outline"
+                                                    size={14}
+                                                    color={"#B8B8D2"}
+                                                />
+                                                <Text className='text-[#B8B8D2] font-light text-sm'>
+                                                    {formatTimeAgo(item.createAt)}
+                                                </Text>
+                                            </View>
+                                            <Text className='text-[#B8B8D2] font-light text-sm mt-1'>
+                                                {item.questionCount ? `${item.questionCount} questions` : ''}
+                                            </Text>
+                                        </View>
                                     </View>
-                                    <Text className='text-[#B8B8D2] font-light text-sm mt-1'>
-                                        {exam.questionCount ? `${exam.questionCount} questions` : ''}
-                                    </Text>
-                                </View>
+                                </TouchableOpacity>
+                            )}
+                            // Tắt load-more tự động, chỉ dùng phân trang thủ công
+                            onEndReached={null}
+                            onEndReachedThreshold={null}
+                            // ListFooterComponent removed, not needed for classic paging
+                            ListEmptyComponent={!loading && <Text style={{ textAlign: 'center', color: '#B8B8D2', marginTop: 32 }}>No exam history found.</Text>}
+                            contentContainerStyle={{ paddingBottom: 24, paddingTop: 24 }}
+                            showsVerticalScrollIndicator={false}
+                            className='mt-6'
+                        />
+                        {/* Pagination controls */}
+                        {totalPages > 1 && (
+                            <View style={{ flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginTop: 8, marginBottom: 16 }}>
+                                <TouchableOpacity
+                                    onPress={() => page > 0 && setPage(page - 1)}
+                                    disabled={page === 0}
+                                    style={{ padding: 10, opacity: page === 0 ? 0.5 : 1 }}
+                                >
+                                    <Ionicons name="chevron-back" size={22} color="#3B82F6" />
+                                </TouchableOpacity>
+                                <Text style={{ marginHorizontal: 16, fontWeight: 'bold', color: '#3B82F6' }}>
+                                    Page {page + 1} / {totalPages}
+                                </Text>
+                                <TouchableOpacity
+                                    onPress={() => page + 1 < totalPages && setPage(page + 1)}
+                                    disabled={page + 1 >= totalPages}
+                                    style={{ padding: 10, opacity: page + 1 >= totalPages ? 0.5 : 1 }}
+                                >
+                                    <Ionicons name="chevron-forward" size={22} color="#3B82F6" />
+                                </TouchableOpacity>
                             </View>
-                        ))}
-                        {examsData.length === 0 && (
-                            <Text style={{ textAlign: 'center', color: '#B8B8D2', marginTop: 32 }}>
-                                No exam history found.
-                            </Text>
                         )}
-                    </ScrollView>
+                    </>
                 )}
             </View>
         </View>

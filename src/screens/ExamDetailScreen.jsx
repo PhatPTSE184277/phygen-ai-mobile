@@ -1,106 +1,73 @@
-import { View, Text, ScrollView, StatusBar, TouchableOpacity, useWindowDimensions, Image, Linking } from 'react-native';
+import { View, Text, StatusBar, TouchableOpacity, useWindowDimensions, Image, ActivityIndicator, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import RenderHtml from 'react-native-render-html';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import axiosClient2 from '../apis/axiosClient2';
+import { WebView } from 'react-native-webview';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 import Toast from 'react-native-toast-message';
 import bg1 from '../../assets/images/bg1.png';
-import * as Print from 'expo-print';
-import * as FileSystem from 'expo-file-system';
+import { useState } from 'react';
 
 const ExamDetailScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
     const exam = route.params?.exam;
     const { width, height } = useWindowDimensions();
+    const [loading, setLoading] = useState(false);
 
-
-    const createPdfFromHtml = async (htmlContent, fileName) => {
-        const { uri } = await Print.printToFileAsync({
-            html: htmlContent,
-            base64: false,
-        });
-        return uri;
-    };
+    const pdfSource =
+        Platform.OS === 'android'
+            ? { uri: `https://docs.google.com/gview?embedded=true&url=${encodeURIComponent(exam?.pdfUrl)}` }
+            : { uri: exam?.pdfUrl };
 
     const handleDownloadPdf = async () => {
+        setLoading(true);
         try {
-            // 1. Tạo PDF từ nội dung đề
-            const htmlContent = exam?.examContentMarkdown
-                ? exam.examContentMarkdown.replace(/\\n/g, '<br>')
-                : '<p>No content</p>';
-            const pdfPath = await createPdfFromHtml(htmlContent, exam.examCode);
-
-            // 2. Upload PDF lên backend
-            const formData = new FormData();
-            formData.append('file', {
-                uri: pdfPath,
-                type: 'application/pdf',
-                name: `exam_${exam.examCode}.pdf`,
-            });
-            formData.append('examVersionJson', JSON.stringify({
-                versionCode: exam.examCode,
-                nameBucket: 'default'
-            }));
-            console.log('FormData:', formData);
-            console.log('PDF Path:', pdfPath);
-            console.log('Exam Version JSON:', JSON.stringify({
-                versionCode: exam.examCode,
-                nameBucket: 'default'
-            }));
-            console.log('Exam id: ', exam.examId)
-
-            const response = await axiosClient2.post(
-                `/api/examVersion/exam/${exam.examId}`,
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'multipart/form-data',
-                    }
-                }
+            const downloadUrl = exam?.pdfUrl;
+            if (!downloadUrl) throw new Error('Không có link PDF!');
+            const fileName = `exam_${exam.examCode}.pdf`;
+            const tempPath = FileSystem.documentDirectory + fileName;
+            const downloadResumable = FileSystem.createDownloadResumable(
+                downloadUrl,
+                tempPath
             );
+            await downloadResumable.downloadAsync();
 
-
-            // 3. Xử lý response từ backend
-            if (response.data?.success && response.data?.data?.pdfUrl) {
-                const downloadUrl = response.data.data.pdfUrl;
-                const localPath = FileSystem.documentDirectory + `exam_${exam.examCode}.pdf`;
-
-                // Tải file PDF từ link online về máy
-                const downloadResumable = FileSystem.createDownloadResumable(
-                    downloadUrl,
-                    localPath
-                );
-                await downloadResumable.downloadAsync();
-
-                Toast.show({
-                    type: 'success',
-                    text1: 'PDF đã tải về máy!',
-                    text2: `File: exam_${exam.examCode}.pdf`,
-                    position: 'top'
-                });
-
-                // Tùy chọn: mở file PDF vừa tải
-                setTimeout(() => {
-                    Linking.openURL(localPath);
-                }, 1000);
-
-            } else {
-                Toast.show({
-                    type: 'error',
-                    text1: 'Upload failed!',
-                    text2: response.data?.message || 'Không nhận được link PDF.',
-                    position: 'top'
-                });
+            let destUri = tempPath;
+            try {
+                if (Platform.OS === 'android') {
+                    const permissions = await FileSystem.StorageAccessFramework.requestDirectoryPermissionsAsync();
+                    if (permissions.granted) {
+                        const baseUri = permissions.directoryUri;
+                        destUri = await FileSystem.StorageAccessFramework.createFileAsync(baseUri, fileName, 'application/pdf');
+                        await FileSystem.writeAsStringAsync(
+                            destUri,
+                            await FileSystem.readAsStringAsync(tempPath, { encoding: FileSystem.EncodingType.Base64 }),
+                            { encoding: FileSystem.EncodingType.Base64 }
+                        );
+                        Toast.show({
+                            type: 'success',
+                            text1: 'Đã lưu PDF vào thư mục Files/Downloads!',
+                            position: 'top'
+                        });
+                    } else {
+                        await Sharing.shareAsync(tempPath);
+                    }
+                } else {
+                    await Sharing.shareAsync(tempPath);
+                }
+            } catch (e) {
+                await Sharing.shareAsync(tempPath);
             }
         } catch (error) {
-            console.log('Axios error:', error);
             Toast.show({
                 type: 'error',
-                text1: 'Upload failed!',
-                text2: error.message || 'Please try again.',
+                text1: 'Tải PDF thất bại!',
+                text2: error?.message || 'Please try again.',
                 position: 'top'
             });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -137,44 +104,47 @@ const ExamDetailScreen = () => {
                     {exam?.examCode || 'Exam Detail'}
                 </Text>
             </View>
-            <ScrollView className='flex-1 px-6' style={{ zIndex: 1 }} contentContainerStyle={{ paddingBottom: 24 }}>
-                <View
-                    style={{
-                        backgroundColor: '#fff',
-                        borderRadius: 24,
-                        padding: 20,
-                        marginTop: 18,
-                        marginBottom: 18,
-                        shadowColor: '#000',
-                        shadowOffset: { width: 0, height: 4 },
-                        shadowOpacity: 0.10,
-                        shadowRadius: 12,
-                        elevation: 8,
-                    }}
-                >
-                    <RenderHtml
-                        contentWidth={width}
-                        source={{
-                            html:
-                                exam?.examContentMarkdown
-                                    ? exam.examContentMarkdown.replace(/\n/g, '<br>')
-                                    : '<p>No content</p>'
-                        }}
-                        ignoredDomTags={['center']}
+            <View className='flex-1 px-6' style={{ zIndex: 1 }}>
+                {exam?.pdfUrl ? (
+                    <WebView
+                        source={pdfSource}
+                        style={{ flex: 1 }}
+                        startInLoadingState={true}
+                        renderLoading={() => (
+                            <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                                <ActivityIndicator size="large" color="#3B82F6" />
+                                <Text style={{ marginTop: 10, fontSize: 16, color: '#3B82F6' }}>Loading PDF...</Text>
+                            </View>
+                        )}
+                        // Fix lỗi trắng trên Android khi dùng Google Docs Viewer
+                        originWhitelist={['*']}
+                        javaScriptEnabled={true}
+                        domStorageEnabled={true}
                     />
-                </View>
-            </ScrollView>
+                ) : (
+                    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                        <Text style={{ fontSize: 16, color: 'red' }}>Không tìm thấy file PDF!</Text>
+                    </View>
+                )}
+            </View>
             <View className='px-6 pb-6' style={{ zIndex: 1 }}>
                 <TouchableOpacity
                     className='bg-blue-600 rounded-2xl py-4 items-center flex-row justify-center'
                     activeOpacity={0.85}
-                    onPress={handleDownloadPdf}
+                    onPress={loading ? undefined : handleDownloadPdf}
+                    disabled={loading}
                     style={{ shadowColor: '#2563EB', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4 }}
                 >
-                    <Ionicons name="download-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
-                    <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
-                        Download PDF
-                    </Text>
+                    {loading ? (
+                        <ActivityIndicator color="#fff" />
+                    ) : (
+                        <>
+                            <Ionicons name="download-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
+                            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}>
+                                Download PDF
+                            </Text>
+                        </>
+                    )}
                 </TouchableOpacity>
             </View>
         </View>

@@ -7,7 +7,8 @@ import {
     StatusBar,
     Image,
     ScrollView,
-    TextInput
+    TextInput,
+    ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,11 +31,13 @@ const GenerateScreen = () => {
     const [matrices, setMatrices] = useState([]);
     const [levels, setLevels] = useState([]);
     const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
     const variantValues = [1, 2, 3, 4];
 
     useEffect(() => {
         const fetchSubjects = async () => {
+            setIsLoading(true);
             try {
                 const response = await axiosClient.get('/api/subjects/active');
                 if (response.data.success) {
@@ -54,8 +57,9 @@ const GenerateScreen = () => {
         };
 
         const fetchLevels = async () => {
+            setIsLoading(true);
             try {
-                const response = await axiosClient2.get('/api/matrixDetail/difficultyLevel');
+                const response = await axiosClient2.get('/api/matrix-details/enum-difficult-level');
                 if (response.data.success) {
                     setLevels(response.data.data);
                 }
@@ -73,7 +77,7 @@ const GenerateScreen = () => {
             if (!selectedSubject) return;
             try {
                 const response = await axiosClient2.get(
-                    `/api/examMatrix/subject/${selectedSubject.id}`
+                    `/api/exam-matrices/by-subject/${selectedSubject.id}`
                 );
                 if (response.data.success) {
                     setMatrices(response.data.data);
@@ -85,6 +89,8 @@ const GenerateScreen = () => {
                 }
             } catch (error) {
                 console.error('Error fetching matrices:', error);
+            }finally{
+                setIsLoading(false);
             }
         };
 
@@ -95,7 +101,7 @@ const GenerateScreen = () => {
         navigation.goBack();
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!title || !selectedSubject || !selectedMatrix || !selectedLevel || !selectedVariants) {
             setError('Please fill in all required fields!');
             return;
@@ -109,7 +115,11 @@ const GenerateScreen = () => {
             difficultyLevel: selectedLevel,
             examQuantity: String(selectedVariants)
         };
-        navigation.navigate('Summary', { examPreview: payload });
+        try {
+            navigation.navigate('Summary', { examPreview: payload });
+        } catch (error) {
+            console.error('Error during confirmation:', error);
+        }
     };
 
     const handleSubjectSelect = (subject) => {
@@ -153,142 +163,149 @@ const GenerateScreen = () => {
                     Generate
                 </Text>
             </View>
-            <ScrollView className='flex-1 px-6' style={{ zIndex: 1 }}>
-                <View className='mb-6'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Title
-                    </Text>
-                    <TextInput
-                        value={title}
-                        onChangeText={text => {
-                            setTitle(text);
-                            if (error) setError('');
-                        }}
-                        placeholder='Enter Exam Title'
-                        className='bg-white rounded-xl px-4 py-4 text-base text-gray-900'
-                        style={{
-                            borderColor: error ? 'red' : '#fff',
-                            borderWidth: error ? 1.5 : 0,
-                            shadowColor: '#000',
-                            shadowOffset: { width: 0, height: 1 },
-                            shadowOpacity: 0.1,
-                            shadowRadius: 2
-                        }}
-                    />
-                    {error ? (
-                        <Text style={{ color: 'red', marginTop: 6, marginLeft: 4, fontSize: 14 }}>
-                            {error}
+
+            {isLoading ? (
+                <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <ActivityIndicator size="large" color="#3B82F6" className="mt-4 p-10" />
+                </View>
+            ) : (
+                <ScrollView className='flex-1 px-6' style={{ zIndex: 1 }}>
+                    <View className='mb-6'>
+                        <Text className='text-base font-medium text-gray-900 mb-3'>
+                            Title
                         </Text>
-                    ) : null}
-                </View>
-
-                {/* Subject */}
-                <View className='mb-6'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Subjects
-                    </Text>
-                    <View className='flex-row flex-wrap' style={{ gap: 12 }}>
-                        {subjects.map((subject) => (
-                            <TouchableOpacity
-                                key={subject.id}
-                                onPress={() => handleSubjectSelect(subject)}
-                                className={`px-4 py-3 rounded-xl ${selectedSubject?.id === subject.id ? 'bg-blue-600' : 'bg-white'}`}
-                                style={{
-                                    shadowColor: '#000',
-                                    shadowOffset: { width: 0, height: 1 },
-                                    shadowOpacity: 0.1,
-                                    shadowRadius: 2
-                                }}
-                            >
-                                <Text
-                                    className={`text-sm font-medium ${selectedSubject?.id === subject.id ? 'text-white' : 'text-gray-700'}`}
-                                >
-                                    {subject.name}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
+                        <TextInput
+                            value={title}
+                            onChangeText={text => {
+                                setTitle(text);
+                                if (error) setError('');
+                            }}
+                            placeholder='Enter Exam Title'
+                            className='bg-white rounded-xl px-4 py-4 text-base text-gray-900'
+                            style={{
+                                borderColor: error ? 'red' : '#fff',
+                                borderWidth: error ? 1.5 : 0,
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 1 },
+                                shadowOpacity: 0.1,
+                                shadowRadius: 2
+                            }}
+                        />
+                        {error ? (
+                            <Text style={{ color: 'red', marginTop: 6, marginLeft: 4, fontSize: 14 }}>
+                                {error}
+                            </Text>
+                        ) : null}
                     </View>
-                </View>
 
-                <View className='mb-6'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Level
-                    </Text>
-                    <View className='flex-row' style={{ gap: 12 }}>
-                        {levels.map((level) => (
-                            <TouchableOpacity
-                                key={level}
-                                onPress={() => setSelectedLevel(level)}
-                                className={`px-6 py-3 rounded-xl ${selectedLevel === level ? 'bg-blue-600' : 'bg-white'}`}
-                                style={{
-                                    shadowColor: '#000',
-                                    shadowOffset: { width: 0, height: 1 },
-                                    shadowOpacity: 0.1,
-                                    shadowRadius: 2
-                                }}
-                            >
-                                <Text
-                                    className={`text-base font-medium ${selectedLevel === level ? 'text-white' : 'text-gray-700'}`}
+                    {/* Subject */}
+                    <View className='mb-6'>
+                        <Text className='text-base font-medium text-gray-900 mb-3'>
+                            Subjects
+                        </Text>
+                        <View className='flex-row flex-wrap' style={{ gap: 12 }}>
+                            {subjects.map((subject) => (
+                                <TouchableOpacity
+                                    key={subject.id}
+                                    onPress={() => handleSubjectSelect(subject)}
+                                    className={`px-4 py-3 rounded-xl ${selectedSubject?.id === subject.id ? 'bg-blue-600' : 'bg-white'}`}
+                                    style={{
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 1 },
+                                        shadowOpacity: 0.1,
+                                        shadowRadius: 2
+                                    }}
                                 >
-                                    {level}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
+                                    <Text
+                                        className={`text-sm font-medium ${selectedSubject?.id === subject.id ? 'text-white' : 'text-gray-700'}`}
+                                    >
+                                        {subject.name}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
                     </View>
-                </View>
 
-                <View className='mb-6'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Matrix
-                    </Text>
-                    <View className='flex-row flex-wrap' style={{ gap: 12 }}>
-                        {[...new Set(matrices.map(m => m.examType || m.examtype))].map((examType, idx) => (
-                            <TouchableOpacity
-                                key={examType + idx}
-                                onPress={() => setSelectedMatrix(examType)}
-                                className={`px-4 py-3 rounded-xl ${selectedMatrix === examType ? 'bg-blue-600' : 'bg-white'}`}
-                                style={{
-                                    shadowColor: '#000',
-                                    shadowOffset: { width: 0, height: 1 },
-                                    shadowOpacity: 0.1,
-                                    shadowRadius: 2
-                                }}
-                            >
-                                <Text
-                                    className={`text-sm font-medium ${selectedMatrix === examType ? 'text-white' : 'text-gray-700'}`}
+                    <View className='mb-6'>
+                        <Text className='text-base font-medium text-gray-900 mb-3'>
+                            Level
+                        </Text>
+                        <View className='flex-row' style={{ gap: 12 }}>
+                            {levels.map((level) => (
+                                <TouchableOpacity
+                                    key={level}
+                                    onPress={() => setSelectedLevel(level)}
+                                    className={`px-6 py-3 rounded-xl ${selectedLevel === level ? 'bg-blue-600' : 'bg-white'}`}
+                                    style={{
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 1 },
+                                        shadowOpacity: 0.1,
+                                        shadowRadius: 2
+                                    }}
                                 >
-                                    {MatrixLabels[examType] || examType}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
+                                    <Text
+                                        className={`text-base font-medium ${selectedLevel === level ? 'text-white' : 'text-gray-700'}`}
+                                    >
+                                        {level}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
                     </View>
-                </View>
 
-                <View className='mb-8'>
-                    <Text className='text-base font-medium text-gray-900 mb-3'>
-                        Variants
-                    </Text>
-                    <StepSelector
-                        values={variantValues}
-                        selectedValue={selectedVariants}
-                        onValueChange={setSelectedVariants}
-                    />
-                </View>
+                    <View className='mb-6'>
+                        <Text className='text-base font-medium text-gray-900 mb-3'>
+                            Matrix
+                        </Text>
+                        <View className='flex-row flex-wrap' style={{ gap: 12 }}>
+                            {[...new Set(matrices.map(m => m.examType || m.examtype))].map((examType, idx) => (
+                                <TouchableOpacity
+                                    key={examType + idx}
+                                    onPress={() => setSelectedMatrix(examType)}
+                                    className={`px-4 py-3 rounded-xl ${selectedMatrix === examType ? 'bg-blue-600' : 'bg-white'}`}
+                                    style={{
+                                        shadowColor: '#000',
+                                        shadowOffset: { width: 0, height: 1 },
+                                        shadowOpacity: 0.1,
+                                        shadowRadius: 2
+                                    }}
+                                >
+                                    <Text
+                                        className={`text-sm font-medium ${selectedMatrix === examType ? 'text-white' : 'text-gray-700'}`}
+                                    >
+                                        {MatrixLabels[examType] || examType}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
 
-                <TouchableOpacity
-                    onPress={handleConfirm}
-                    className='bg-blue-600 py-4 rounded-2xl mb-12 flex-row items-center justify-center'
-                >
-                    <Text className='text-white text-center text-lg font-medium mr-2'>
-                        CONFIRM
-                    </Text>
-                    <Ionicons
-                        name='chevron-forward-outline'
-                        size={20}
-                        color='white'
-                    />
-                </TouchableOpacity>
-            </ScrollView>
+                    <View className='mb-8'>
+                        <Text className='text-base font-medium text-gray-900 mb-3'>
+                            Variants
+                        </Text>
+                        <StepSelector
+                            values={variantValues}
+                            selectedValue={selectedVariants}
+                            onValueChange={setSelectedVariants}
+                        />
+                    </View>
+
+                    <TouchableOpacity
+                        onPress={handleConfirm}
+                        className='bg-blue-600 py-4 rounded-2xl mb-12 flex-row items-center justify-center'
+                    >
+                        <Text className='text-white text-center text-lg font-medium mr-2'>
+                            CONFIRM
+                        </Text>
+                        <Ionicons
+                            name='chevron-forward-outline'
+                            size={20}
+                            color='white'
+                        />
+                    </TouchableOpacity>
+                </ScrollView>
+            )}
         </View>
     );
 };
