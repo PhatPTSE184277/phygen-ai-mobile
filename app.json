@@ -2,6 +2,7 @@
   "expo": {
     "name": "phygen-ai-mobile",
     "slug": "phygen-ai-mobile",
+    "scheme": "phygenaimobile",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png"
@@ -10,7 +11,8 @@
       "tsconfigPaths": true
     },
     "plugins": [
-      "expo-font"
+      "expo-font",
+      "expo-web-browser"
     ],
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",

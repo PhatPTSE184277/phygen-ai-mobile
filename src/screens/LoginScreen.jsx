@@ -22,6 +22,10 @@ import facebookIcon from '../../assets/images/fb.png';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+
+WebBrowser.maybeCompleteAuthSession();
 const { width, height } = Dimensions.get('window');
 
 const LoginScreen = () => {
@@ -33,6 +37,63 @@ const LoginScreen = () => {
     const [isPasswordShow, setIsPasswordShow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const authData = useSelector(authSelector);
+
+    const [request, response, promptAsync] = Google.useAuthRequest({
+        expoClientId: '1044921846734-8qvl23shh4p8li2drq2gv6fnj5ea0qnb.apps.googleusercontent.com',
+        androidClientId: '1044921846734-8qvl23shh4p8li2drq2gv6fnj5ea0qnb.apps.googleusercontent.com',
+        // iosClientId: 'nếu có thì thêm vào đây',
+    });
+
+    useEffect(() => {
+        if (response?.type === 'success') {
+            const { id_token } = response.params;
+            handleGoogleLogin(id_token);
+        }
+    }, [response]);
+
+    const handleGoogleLogin = async (idToken) => {
+        try {
+            setIsLoading(true);
+            const res = await axiosClient.post('/api/Auth/login/google', { idToken });
+            if (res.data.success) {
+                const expiresIn = res.data.data.expiresIn;
+                const expiryTime = new Date().getTime() + expiresIn * 1000;
+                const authData = {
+                    token: res.data.data.token,
+                    expiryTime: expiryTime,
+                    _id: res.data.data.account.id || '',
+                    username: res.data.data.account.username,
+                    email: res.data.data.account.email,
+                    emailVerified: res.data.data.account.emailVerified,
+                    accountType: res.data.data.account.accountType,
+                    role: res.data.data.account.role,
+                    isFirstTimeUse: false
+                };
+                await AsyncStorage.setItem('Auth_Data', JSON.stringify(authData));
+                dispatch(addAuth(authData));
+                if (isFirstTimeUse) {
+                    await setFirstTimeUsed();
+                }
+                Toast.show({
+                    type: 'success',
+                    text1: 'Login Successful!',
+                    text2: `Welcome back, ${res.data.data.account.username}!`,
+                    position: 'top'
+                });
+            } else {
+                throw new Error('Google login failed');
+            }
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Google Login Failed',
+                text2: error.message || 'Something went wrong',
+                position: 'top'
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         if (authData.token) {
@@ -241,6 +302,8 @@ const LoginScreen = () => {
                             shadowRadius: 8,
                             elevation: 3
                         }}
+                        onPress={() => promptAsync()}
+                        disabled={!request || isLoading}
                     >
                         <Image
                             source={googleIcon}
