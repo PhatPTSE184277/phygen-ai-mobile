@@ -1,3 +1,4 @@
-import StepSelector from "~/components/StepSelector";
+import StepSelector from '../components/StepSelector';
+import Footer from '../components/Footer';
 
-export { StepSelector };
+export { StepSelector, Footer };

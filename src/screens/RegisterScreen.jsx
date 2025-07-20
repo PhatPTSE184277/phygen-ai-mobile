@@ -18,7 +18,7 @@ import axios from 'axios';
 import facebookIcon from '../../assets/images/fb.png';
 import Feather from 'react-native-vector-icons/Feather';
 import Toast from 'react-native-toast-message';
-import axiosClient from '~/apis/axiosClient';
+import axiosClient from '../apis/axiosClient';
 const { width, height } = Dimensions.get('window');
 
 const RegisterScreen = () => {

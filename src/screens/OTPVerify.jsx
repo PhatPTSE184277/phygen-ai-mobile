@@ -18,7 +18,7 @@ import Toast from 'react-native-toast-message';
 const bg1 = require('../../assets/images/bg1.png');
 const { width, height } = Dimensions.get('window');
 import { useRoute } from '@react-navigation/native';
-import axiosClient from '~/apis/axiosClient';
+import axiosClient from '../apis/axiosClient';
 import axios from 'axios'; // Ensure axios is imported for API calls
 
 const OTPVerify = () => {

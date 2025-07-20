@@ -18,15 +18,9 @@ export const useAuthLogic = () => {
       const authDataFromStorage = await AsyncStorage.getItem('Auth_Data');
       if (authDataFromStorage) {
         const parsedData = JSON.parse(authDataFromStorage);
-        if (parsedData && parsedData.token) {
-          const currentTime = new Date().getTime();
-          if (parsedData.expiryTime && currentTime > parsedData.expiryTime) {
-            console.log('Token expired on app start');
-            await handleLogout();
-          } else {
-            dispatch(addAuth(parsedData));
-            setIsTokenValid(true);
-          }
+        if (parsedData && parsedData.token && parsedData.refreshToken) {
+          dispatch(addAuth(parsedData));
+          setIsTokenValid(true);
         }
       }
     } catch (error) {
@@ -34,7 +28,8 @@ export const useAuthLogic = () => {
     } finally {
       setIsAppLoading(false);
     }
-  }, [dispatch, handleLogout]);
+  }, [dispatch]);
+
   const checkFirstTimeUse = async () => {
     try {
       const firstTimeFlag = await AsyncStorage.getItem('First_Time_Use');

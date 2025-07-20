@@ -8,18 +8,22 @@ import {
     RegisterScreen,
     PremiumScreen,
     GenerateScreen,
-    SummaryScreen
+    SummaryScreen,
+    OverviewScreen,
+    ExamDetailScreen,
+    ChatScreen
 } from '../screens';
-import HomeTabs from './BottomTabs';
+import HomeTabs from '../navigators/BottomTabs';
 import HistoryScreen from '../screens/HistoryScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import { useAuthLogic } from '../utils/authLogic';
-import OTPVerify from '~/screens/OTPVerify';
-import ForgotPassScreen from '~/screens/ForgotPassScreen';
-import ResetPass from '~/screens/ResetPass';
-import VNPayPaymentScreen from '~/screens/VNPayPaymentScreen';
-
+import OTPVerify from '../screens/OTPVerify';
+import ForgotPassScreen from '../screens/ForgotPassScreen';
+import ResetPass from '../screens/ResetPass';
+import VNPayPaymentScreen from '../screens/VNPayPaymentScreen';
+import { linking } from '../utils/pushNotification';
+import ExamVersionScreen from '../screens/ExamVersionScreen';
 const Stack = createNativeStackNavigator();
 
 const AppNavigator = () => {
@@ -27,7 +31,7 @@ const AppNavigator = () => {
         useAuthLogic();
 
     return (
-        <NavigationContainer>
+        <NavigationContainer linking={linking}>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
                 {isAppLoading ? (
                     <Stack.Screen name='Splash' component={SplashScreen} />
@@ -91,6 +95,22 @@ const AppNavigator = () => {
                             options={{ gestureEnabled: true }}
                         />
                         <Stack.Screen
+                            name='Overview'
+                            component={OverviewScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+
+                        <Stack.Screen
+                            name='ExamDetail'
+                            component={ExamDetailScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name='ExamVersion'
+                            component={ExamVersionScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
                             name='History'
                             component={HistoryScreen}
                             options={{ gestureEnabled: true }}
@@ -103,6 +123,11 @@ const AppNavigator = () => {
                         <Stack.Screen
                             name="VNPayPayment"
                             component={VNPayPaymentScreen}
+                            options={{ gestureEnabled: true }}
+                        />
+                        <Stack.Screen
+                            name='Chat'
+                            component={ChatScreen}
                             options={{ gestureEnabled: true }}
                         />
                     </>

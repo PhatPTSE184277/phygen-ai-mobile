@@ -7,10 +7,9 @@ import {
     Dimensions,
     Image,
     StatusBar,
-    ActivityIndicator
+    ActivityIndicator,
 } from 'react-native';
 
-import { BarChart, PieChart } from 'react-native-gifted-charts';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import axiosClient from '../apis/axiosClient';
@@ -25,59 +24,46 @@ const DashboardScreen = () => {
 
     const [loading, setLoading] = useState(false);
     const [allExams, setAllExams] = useState([]);
-    const [barData, setBarData] = useState([]);
-    const [pieData, setPieData] = useState([]);
     const [yearExists, setYearExists] = useState([]);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [dropdownVisible, setDropdownVisible] = useState(false);
-
-    const [selectedIndex, setSelectedIndex] = useState(0);
-    const [selectedSlice, setSelectedSlice] = useState(null);
 
     const handleBack = () => {
         navigation.goBack();
     };
 
-    const convertToBarData = (data) => {
+    // Thống kê số bài kiểm tra theo tháng
+    const getMonthStats = (exams) => {
         const monthMap = Array(12).fill(0);
-        data.forEach((item) => {
+        exams.forEach((item) => {
             const date = new Date(item.createdAt);
-            const year = date.getFullYear();
-            const month = date.getMonth(); // 0 - 11
-
-            if (year === selectedYear) {
-                monthMap[month] += item.questionCount;
+            if (date.getFullYear() === selectedYear) {
+                monthMap[date.getMonth()] += 1;
             }
         });
+        return monthMap;
+    }
 
-        const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-        return monthMap.map((value, index) => ({
-            label: monthLabels[index],
-            value,
-            frontColor: '#A689FC',
-        }));
+    const getSubjectStats = (exams) => {
+        const subjectMap = {};
+        exams.forEach((item) => {
+            const date = new Date(item.createdAt);
+            if (date.getFullYear() === selectedYear) {
+                subjectMap[item.subjectName] = (subjectMap[item.subjectName] || 0) + (item.questionCount || 0);
+            }
+        });
+        return subjectMap;
     };
 
-
-    const convertToPieData = (data) => {
-        const subjectMap = {};
-        data.forEach((item) => {
-            const year = new Date(item.createdAt).getFullYear();
-            if (year !== selectedYear) return;
-
-            if (!subjectMap[item.subjectName]) subjectMap[item.subjectName] = 0;
-            subjectMap[item.subjectName] += item.questionCount;
+    const getExamTypeStats = (exams) => {
+        const typeMap = {};
+        exams.forEach((item) => {
+            const date = new Date(item.createdAt);
+            if (date.getFullYear() === selectedYear) {
+                typeMap[item.examType] = (typeMap[item.examType] || 0) + 1;
+            }
         });
-
-        const total = Object.values(subjectMap).reduce((sum, val) => sum + val, 0);
-        const colors = ['#9787FF', '#FFA5DA', '#00BCD4', '#FFD700', '#87CEEB'];
-
-        return Object.entries(subjectMap).map(([name, count], index) => ({
-            value: total > 0 ? Math.round((count / total) * 100) : 0,
-            color: colors[index % colors.length],
-            text: name,
-        }));
+        return typeMap;
     };
 
     const extractYearsFromExams = (data) => {
@@ -90,11 +76,11 @@ const DashboardScreen = () => {
             setLoading(true);
             const response = await axiosClient.get('/api/AccountUser/me/exams');
 
+            console.log('Dashboard exams response:', response.data.data);
             if (response.data.success) {
-                const exams = response.data.data;
+                const exams = response.data.data?.filter(Boolean) || [];
                 setAllExams(exams);
                 extractYearsFromExams(exams);
-                updateChartsForYear(selectedYear, exams);
             } else {
                 Toast.show({
                     type: 'error',
@@ -113,20 +99,11 @@ const DashboardScreen = () => {
         }
     };
 
-    const updateChartsForYear = (year, exams = allExams) => {
-        const filtered = exams.filter((item) => new Date(item.createdAt).getFullYear() === year);
-        const bar = convertToBarData(filtered);
-        const pie = convertToPieData(filtered);
-        setBarData(bar);
-        setPieData(pie);
-        setSelectedSlice(pie[0]);
-        setSelectedIndex(0);
-    };
+    // Không cần updateChartsForYear nữa
 
     const onYearChange = (year) => {
         setSelectedYear(year);
         setDropdownVisible(false);
-        updateChartsForYear(year);
     };
 
     useFocusEffect(
@@ -135,23 +112,21 @@ const DashboardScreen = () => {
         }, [])
     );
 
-    const getUpdatedPieData = () =>
-        pieData.map((item, index) => ({
-            ...item,
-            focused: index === selectedIndex,
-        }));
+    // Không cần các hàm chart nữa
+
+    // Tính toán thống kê
+    const monthLabels = ['Tháng 1', 'Tháng 2', 'Tháng 3', 'Tháng 4', 'Tháng 5', 'Tháng 6', 'Tháng 7', 'Tháng 8', 'Tháng 9', 'Tháng 10', 'Tháng 11', 'Tháng 12'];
+    const monthStats = getMonthStats(allExams);
+    const subjectStats = getSubjectStats(allExams);
+    const examTypeStats = getExamTypeStats(allExams);
+    const totalExams = allExams.filter((item) => new Date(item.createdAt).getFullYear() === selectedYear).length;
+    const totalQuestions = allExams.filter((item) => new Date(item.createdAt).getFullYear() === selectedYear).reduce((sum, item) => sum + (item.questionCount || 0), 0);
 
     return (
         <View className="flex-1 bg-gray-100 relative">
             <StatusBar backgroundColor="#F3F4F6" barStyle="dark-content" />
-
-            {/* Background Image */}
             <View className="absolute bottom-0 left-0 right-0" style={{ zIndex: 0 }}>
-                <Image
-                    source={bg1}
-                    style={{ width: width, height: height * 0.8 }}
-                    resizeMode="cover"
-                />
+                <Image source={bg1} style={{ width, height: height * 0.8 }} resizeMode="cover" />
             </View>
 
             {/* Header */}
@@ -163,131 +138,99 @@ const DashboardScreen = () => {
             </View>
 
             <ScrollView className="px-6 pb-10" contentContainerStyle={{ paddingBottom: 80 }}>
-                {/* Dropdown */}
-                <View className="flex-row justify-between items-center mt-6 mb-4">
-                    <Text className="text-lg font-bold text-gray-800">Exams</Text>
-                    <View className="relative">
-                        <TouchableOpacity
-                            onPress={() => setDropdownVisible(!dropdownVisible)}
-                            className="px-3 py-1 bg-gray-100 rounded-full flex-row items-center"
-                        >
-                            <Text className="text-sm text-gray-600 mr-1">{selectedYear}</Text>
-                            <Ionicons name="chevron-down-outline" size={14} color="#6B7280" />
-                        </TouchableOpacity>
-                        {dropdownVisible && (
-                            <View className="absolute top-10 right-0 bg-white rounded-xl shadow-lg z-50">
-                                {yearExists.map((year) => (
-                                    <TouchableOpacity
-                                        key={year}
-                                        onPress={() => onYearChange(year)}
-                                        className="px-4 py-2"
-                                    >
-                                        <Text className={`text-sm ${selectedYear === year ? 'text-blue-500 font-bold' : 'text-gray-700'}`}>
-                                            {year}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        )}
+                {/* Dropdown chọn năm */}
+                {yearExists && yearExists.length > 0 && (
+                    <View className="flex-row justify-between items-center mt-6 mb-4">
+                        <Text className="text-lg font-bold text-gray-800">Năm thống kê</Text>
+                        <View className="relative">
+                            <TouchableOpacity
+                                onPress={() => setDropdownVisible(!dropdownVisible)}
+                                className="px-3 py-1 bg-gray-100 rounded-full flex-row items-center"
+                            >
+                                <Text className="text-sm text-gray-600 mr-1">{selectedYear}</Text>
+                                <Ionicons name="chevron-down-outline" size={14} color="#6B7280" />
+                            </TouchableOpacity>
+                            {dropdownVisible && (
+                                <View className="absolute top-10 right-0 bg-white rounded-xl shadow-lg z-50">
+                                    {yearExists.map((year) => (
+                                        <TouchableOpacity
+                                            key={`year-${year}`}
+                                            onPress={() => onYearChange(year)}
+                                            className="px-4 py-2"
+                                        >
+                                            <Text className={`text-sm ${selectedYear === year ? 'text-blue-500 font-bold' : 'text-gray-700'}`}>
+                                                {year}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            )}
+                        </View>
                     </View>
+                )}
+
+                {/* Tổng quan */}
+                <View className="bg-white rounded-xl p-4 mb-6 shadow">
+                    <Text className="text-lg font-bold mb-2">Tổng quan</Text>
+                    <Text className="text-base text-gray-700">Tổng số bài kiểm tra: <Text className="font-bold text-blue-600">{totalExams}</Text></Text>
+                    <Text className="text-base text-gray-700">Tổng số câu hỏi: <Text className="font-bold text-blue-600">{totalQuestions}</Text></Text>
                 </View>
 
-                {/* Loading indicator */}
-                {loading ? (
-                    <ActivityIndicator size="large" color="#6B7280" className="mt-20" />
-                ) : (
-                    <>
-                        {/* Bar Chart */}
-                        <View className="mt-4">
-                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                <BarChart
-                                    barWidth={22}
-                                    noOfSections={5}
-                                    barBorderRadius={6}
-                                    frontColor="#A689FC"
-                                    data={barData}
-                                    yAxisTextStyle={{ color: '#9CA3AF' }}
-                                    xAxisLabelTextStyle={{ color: '#6B7280', fontSize: 12 }}
-                                    spacing={24}
-                                    isAnimated
-                                    stepValue={5}
-                                    hideRules={false}
-                                    renderTooltip={(item) => (
+                {/* Thống kê số bài kiểm tra theo tháng */}
+                <View className="bg-white rounded-xl p-4 mb-6 shadow">
+                    <Text className="text-lg font-bold mb-2">Số bài kiểm tra theo tháng</Text>
+                    {/* Biểu đồ cột: Tailwind, scroll ngang, không overflow */}
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4 px-2">
+                        <View className="flex-row items-end" style={{ height: 250 }}>
+                            {monthStats.map((count, idx) => {
+                                const max = Math.max(20, ...monthStats);
+                                // Tăng chiều cao cột lên gấp 5 lần (từ 90 lên 450)
+                                const barHeight = max > 0 ? (count / max) * 200 : 0;
+                                return (
+                                    <View key={idx} className="w-10 items-center justify-end mx-1">
+                                        {/* Số lượng trên đầu cột */}
+                                        {count > 0 && (
+                                            <Text className="text-xs font-bold text-gray-800 mb-1">{count}</Text>
+                                        )}
                                         <View
-                                            style={{
-                                                marginBottom: 16,
-                                                marginLeft: -12,
-                                                backgroundColor: 'rgba(100, 61, 255, 0.9)',
-                                                paddingHorizontal: 10,
-                                                paddingVertical: 6,
-                                                borderRadius: 8,
-                                            }}
-                                        >
-                                            <Text style={{ color: '#fff', fontWeight: '600', fontSize: 13 }}>
-                                                {item.value} câu hỏi
-                                            </Text>
-                                        </View>
-                                    )}
-                                    width={barData.length * 50} // Chiều rộng toàn bộ biểu đồ, tính theo số lượng tháng
-                                />
-                            </ScrollView>
-                        </View>
-
-
-                        {/* Pie Chart */}
-                        <View className="mt-8">
-                            <View className="flex-row justify-between items-center mb-4">
-                                <Text className="text-lg font-bold text-gray-800">Grade</Text>
-
-                            </View>
-
-                            <View className="items-center">
-                                <PieChart
-                                    data={getUpdatedPieData()}
-                                    donut
-                                    radius={90}
-                                    innerRadius={60}
-                                    innerCircleColor="#F3F4F6"
-                                    sectionAutoFocus
-                                    initialSelectedIndex={0}
-                                    focusedOuterRadius={110}
-                                    onPress={(item, index) => {
-                                        setSelectedSlice(item);
-                                        setSelectedIndex(index);
-                                    }}
-                                    centerLabelComponent={() => (
-                                        <View style={{ justifyContent: 'center', alignItems: 'center' }}>
-                                            <Text style={{ fontSize: 22, color: 'black', fontWeight: 'bold' }}>
-                                                {selectedSlice?.value || 0}%
-                                            </Text>
-                                            <Text style={{ fontSize: 14, color: 'gray' }}>
-                                                {selectedSlice?.text || ''}
-                                            </Text>
-                                        </View>
-                                    )}
-                                />
-                            </View>
-
-                            {/* Pie Legend */}
-                            <View className="flex-row justify-center flex-wrap mt-4">
-                                {pieData.map((item, index) => (
-                                    <View key={index} className="flex-row items-center mr-6 mb-2">
-                                        <View
-                                            style={{
-                                                width: 10,
-                                                height: 10,
-                                                borderRadius: 5,
-                                                backgroundColor: item.color,
-                                                marginRight: 4,
-                                            }}
+                                            className="w-4 rounded-full mb-2"
+                                            style={{ height: barHeight, backgroundColor: '#4461F2', opacity: count === 0 ? 0.25 : 1 }}
                                         />
-                                        <Text className="text-sm text-gray-600">{item.text}</Text>
+                                        <Text className="text-[11px] text-blue-600 text-center font-semibold mt-1">{monthLabels[idx].replace('Tháng ', '')}</Text>
                                     </View>
-                                ))}
-                            </View>
+                                );
+                            })}
                         </View>
-                    </>
-                )}
+                    </ScrollView>
+                    {/* Bảng số liệu */}
+
+                </View>
+
+                {/* Thống kê theo môn học */}
+                <View className="bg-white rounded-xl p-4 mb-6 shadow">
+                    <Text className="text-lg font-bold mb-2">Số câu hỏi theo môn học</Text>
+                    {Object.keys(subjectStats).length === 0 ? (
+                        <Text className="text-gray-500">Không có dữ liệu</Text>
+                    ) : (
+                        Object.entries(subjectStats).map(([subject, count]) => (
+                            <Text key={subject} className="text-gray-700">{subject}: <Text className="font-bold">{count}</Text></Text>
+                        ))
+                    )}
+                </View>
+
+                {/* Thống kê theo loại bài kiểm tra */}
+                <View className="bg-white rounded-xl p-4 mb-6 shadow">
+                    <Text className="text-lg font-bold mb-2">Số bài kiểm tra theo loại</Text>
+                    {Object.keys(examTypeStats).length === 0 ? (
+                        <Text className="text-gray-500">Không có dữ liệu</Text>
+                    ) : (
+                        Object.entries(examTypeStats).map(([type, count]) => (
+                            <Text key={type} className="text-gray-700">{type}: <Text className="font-bold">{count}</Text></Text>
+                        ))
+                    )}
+                </View>
+
+
             </ScrollView>
         </View>
     );

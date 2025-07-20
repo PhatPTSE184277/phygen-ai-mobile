@@ -3,9 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { View, ActivityIndicator, Text, TouchableOpacity, Image } from 'react-native';
 import Toast from 'react-native-toast-message';
 import { WebView } from 'react-native-webview';
-import axiosClient from '~/apis/axiosClient';
+import axiosClient from '../apis/axiosClient';
 import { Ionicons } from '@expo/vector-icons';
 import bg1 from '../../assets/images/bg1.png';
+import axios from 'axios'; // Ensure axios is imported for API calls
+import { getFCMToken } from '../utils/pushNotification';
 
 export default function VNPayPaymentScreen({ navigation }) {
     const [paymentUrl, setPaymentUrl] = useState(null);
@@ -48,32 +50,44 @@ export default function VNPayPaymentScreen({ navigation }) {
         createVNPayOrder();
     }, []);
 
-    const handleNavigationChange = (navState) => {
+    const handleNavigationChange = async (navState) => {
         const { url } = navState;
+
         if (url.includes('/api/Payment/vnpay-return')) {
-            setShowWebView(false); // Ẩn WebView ngay khi detect callback
+            setShowWebView(false);
+
             const responseCode = new URL(url).searchParams.get('vnp_ResponseCode');
             const transactionStatus = new URL(url).searchParams.get('vnp_TransactionStatus');
             const success = responseCode === '00' && transactionStatus === '00';
-            setTimeout(() => {
+
+            setTimeout(async () => {
                 if (success) {
-                    Toast.show({
-                        type: 'success',
-                        text1: 'Payment Successful!',
-                        text2: 'You have successfully upgraded to the Premium plan.',
-                        position: 'top'
-                    });
                     navigation.reset({ index: 0, routes: [{ name: 'HomeTabs' }] });
+
+                    try {
+                        const FCMToken = await getFCMToken();
+                        await axios.post(
+                            'https://backend-phygen.onrender.com/api/Notification/send-premium-success',
+                            `"${FCMToken}"`,
+                            {
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                            }
+                        );
+                    } catch (error) {
+                        console.error('Notification send error:', error);
+                    }
                 } else {
                     Toast.show({
                         type: 'error',
                         text1: 'Payment Failed',
                         text2: 'Your payment was not successful or was cancelled.',
-                        position: 'top'
+                        position: 'top',
                     });
                     navigation.goBack();
                 }
-            }, 500); // Cho Toast hiện lên trước khi chuyển trang
+            }, 500);
         }
     };
 

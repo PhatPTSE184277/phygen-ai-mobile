@@ -3,16 +3,19 @@ import React from 'react';
 import { View, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { 
-  HomeScreen, 
-  ExploreScreen, 
-  NotificationScreen, 
-  AccountScreen 
+import {
+  HomeScreen,
+  HistoryScreen,
+  NotificationScreen,
+  AccountScreen,
+  PremiumScreen
 } from '../screens';
 import { useNavigation } from '@react-navigation/native';
 
+
+
 const BottomTabs = createBottomTabNavigator();
-const EmptyScreen = () => <View style={{flex: 1}}></View>;
+const EmptyScreen = () => <View style={{ flex: 1 }}></View>;
 
 const HomeTabs = () => {
   const navigation = useNavigation();
@@ -48,32 +51,32 @@ const HomeTabs = () => {
         options={{
           tabBarIcon: ({ color, focused }) => (
             <View className={`items-center ${focused ? 'scale-110' : ''}`}>
-              <Ionicons 
-                name={focused ? "home" : "home-outline"} 
-                size={24} 
-                color={color} 
+              <Ionicons
+                name={focused ? "home" : "home-outline"}
+                size={24}
+                color={color}
               />
             </View>
           ),
         }}
       />
-      
+
       <BottomTabs.Screen
-        name="Explore"
-        component={ExploreScreen}
+        name="History"
+        component={HistoryScreen}
         options={{
           tabBarIcon: ({ color, focused }) => (
             <View className={`items-center ${focused ? 'scale-110' : ''}`}>
-              <Ionicons 
-                name={focused ? "map" : "map-outline"} 
-                size={24} 
-                color={color} 
+              <Ionicons
+                name={focused ? "map" : "map-outline"}
+                size={24}
+                color={color}
               />
             </View>
           ),
         }}
       />
-      
+
       <BottomTabs.Screen
         name="Plus"
         component={EmptyScreen}
@@ -93,33 +96,33 @@ const HomeTabs = () => {
           tabBarLabel: () => null
         }}
       />
-      
+
       <BottomTabs.Screen
-        name="Notification"
-        component={NotificationScreen}
+        name="Premium"
+        component={PremiumScreen}
         options={{
           tabBarIcon: ({ color, focused }) => (
             <View className={`items-center ${focused ? 'scale-110' : ''}`}>
-              <Ionicons 
-                name={focused ? "chatbox-ellipses" : "chatbox-ellipses-outline"} 
-                size={24} 
-                color={color} 
+              <Ionicons
+                name={focused ? "sparkles" : "sparkles-outline"}
+                size={24}
+                color={color}
               />
             </View>
           ),
         }}
       />
-      
+
       <BottomTabs.Screen
         name="Account"
         component={AccountScreen}
         options={{
           tabBarIcon: ({ color, focused }) => (
             <View className={`items-center ${focused ? 'scale-110' : ''}`}>
-              <Ionicons 
-                name={focused ? "person" : "person-outline"} 
-                size={24} 
-                color={color} 
+              <Ionicons
+                name={focused ? "person" : "person-outline"}
+                size={24}
+                color={color}
               />
             </View>
           ),

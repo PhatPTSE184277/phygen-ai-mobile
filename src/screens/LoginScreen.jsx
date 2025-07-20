@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -9,11 +9,11 @@ import {
     StatusBar,
     ActivityIndicator
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useDispatch } from 'react-redux';
+import { CommonActions, useNavigation } from '@react-navigation/native';
+import { useDispatch, useSelector } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosClient from '../apis/axiosClient';
-import { addAuth } from '../reduxs/reducers/authReducer';
+import { addAuth, authSelector } from '../reduxs/reducers/authReducer';
 import { useAuthLogic } from '../utils/authLogic';
 import Toast from 'react-native-toast-message';
 import bg1 from '../../assets/images/bg1.png';
@@ -22,6 +22,10 @@ import facebookIcon from '../../assets/images/fb.png';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+import * as WebBrowser from 'expo-web-browser';
+import * as Google from 'expo-auth-session/providers/google';
+
+WebBrowser.maybeCompleteAuthSession();
 const { width, height } = Dimensions.get('window');
 
 const LoginScreen = () => {
@@ -32,6 +36,88 @@ const LoginScreen = () => {
     const [password, setPassword] = useState('');
     const [isPasswordShow, setIsPasswordShow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const authData = useSelector(authSelector);
+
+    const [request, response, promptAsync] = Google.useAuthRequest({
+        androidClientId: '885565041467-8qliqdneg3rcf713f7qfkr77oamaaoba.apps.googleusercontent.com', // dùng khi build APK
+        scopes: ['openid', 'profile', 'email'],
+    });
+
+
+    useEffect(() => {
+        if (response?.type === 'success') {
+            const { id_token } = response.authentication;
+            if (id_token) {
+                handleGoogleLogin(id_token);
+            }
+        }
+    }, [response]);
+
+
+
+    const handleGoogleLogin = async (idToken) => {
+
+        try {
+            setIsLoading(true);
+            const res = await axiosClient.post('/api/Auth/login/google', { idToken });
+            if (res.data.success) {
+                const expiresIn = res.data.data.expiresIn;
+                const expiryTime = new Date().getTime() + expiresIn * 1000;
+                const authData = {
+                    token: res.data.data.token,
+                    expiryTime: expiryTime,
+                    _id: res.data.data.account.id || '',
+                    username: res.data.data.account.username,
+                    email: res.data.data.account.email,
+                    emailVerified: res.data.data.account.emailVerified,
+                    accountType: res.data.data.account.accountType,
+                    role: res.data.data.account.role,
+                    isFirstTimeUse: false
+                };
+                await AsyncStorage.setItem('Auth_Data', JSON.stringify(authData));
+                dispatch(addAuth(authData));
+                if (isFirstTimeUse) {
+                    await setFirstTimeUsed();
+                }
+                Toast.show({
+                    type: 'success',
+                    text1: 'Login Successful!',
+                    text2: `Welcome back, ${res.data.data.account.username}!`,
+                    position: 'top'
+                });
+            } else {
+                throw new Error('Google login failed');
+            }
+        } catch (error) {
+            Toast.show({
+                type: 'error',
+                text1: 'Google Login Failed',
+                text2: error.message || 'Something went wrong',
+                position: 'top'
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (authData.token) {
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'HomeTabs' }]
+            });
+        }
+    }, [authData.token]);
+
+    useEffect(() => {
+        if (authData.token) {
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'HomeTabs' }]
+            });
+        }
+    }, [authData.token]);
+
     const handleLogin = async () => {
         if (!email || !password) {
             Toast.show({
@@ -59,13 +145,15 @@ const LoginScreen = () => {
                 const authData = {
                     token: response.data.data.token,
                     expiryTime: expiryTime,
-                    _id: response.data.data.account.id || '',
-                    username: response.data.data.account.username,
-                    email: response.data.data.account.email,
-                    emailVerified: response.data.data.account.emailVerified,
-                    accountType: response.data.data.account.accountType,
-                    role: response.data.data.account.role,
-                    isFirstTimeUse: false
+                    _id: response.data.data.user.id || '',
+                    username: response.data.data.user.username,
+                    email: response.data.data.user.email,
+                    emailVerified: response.data.data.user.emailVerified,
+                    accountType: response.data.data.user.accountType,
+                    role: response.data.data.user.role,
+                    isFirstTimeUse: false,
+                    refreshToken: response.data.data.refreshToken,
+
                 };
 
                 await AsyncStorage.setItem(
@@ -83,6 +171,7 @@ const LoginScreen = () => {
                     text2: 'Welcome back!',
                     position: 'top'
                 });
+
             } else {
                 let errorMessage = 'Login failed';
 
@@ -124,6 +213,8 @@ const LoginScreen = () => {
             setIsLoading(false);
         }
     };
+
+
 
     const handleGoBack = () => {
         navigation.goBack();
@@ -249,6 +340,8 @@ const LoginScreen = () => {
                             shadowRadius: 8,
                             elevation: 3
                         }}
+                        onPress={() => promptAsync()}
+                        disabled={!request || isLoading}
                     >
                         <Image
                             source={googleIcon}

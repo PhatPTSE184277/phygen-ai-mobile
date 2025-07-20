@@ -24,7 +24,6 @@ import axios from 'axios';
 import { useAuthLogic } from '../utils/authLogic';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const defaultAvatar = require('../../assets/images/defaultAvatar.png');
 const bg1 = require('../../assets/images/bg1.png');
 
 const { width, height } = Dimensions.get('window');
@@ -34,7 +33,7 @@ const ProfileScreen = () => {
     const emailRef = useRef();
     const passwordRef = useRef();
     const [isPasswordShow, setIsPasswordShow] = useState(false);
-    const [avatarInfo, setAvatarInfo] = useState(null);
+
     const [loading, setLoading] = useState(false);
     const [loadingUpdate, setLoadingUpdate] = useState(false);
     const [form, setForm] = useState({
@@ -63,7 +62,13 @@ const ProfileScreen = () => {
         });
 
         if (!result.canceled) {
-            setAvatarInfo(result.assets[0]);
+            // Khi chọn ảnh, cập nhật trực tiếp vào form.avatar
+            const asset = result.assets[0];
+            setForm((prevForm) => ({
+                ...prevForm,
+                avatar: asset.uri,
+                avatarLocal: asset, // Lưu thêm thông tin local nếu cần upload
+            }));
         }
     };
 
@@ -72,66 +77,52 @@ const ProfileScreen = () => {
             setLoadingUpdate(true);
 
             // Upload avatar if selected
-            if (avatarInfo) {
-                try {
-                    const formData = new FormData();
-                    formData.append('File', {
-                        uri: Platform.OS === 'android' ? avatarInfo.uri : avatarInfo.uri.replace('file://', ''),
-                        name: avatarInfo.fileName,
-                        type: avatarInfo.mimeType,
-                    });
-                    let accessToken
-                    try {
-                        accessToken = await AsyncStorage.getItem('Auth_Data');
-                        if (accessToken) {
-                            const authData = JSON.parse(accessToken);
-                            if (authData && authData.token) {
-                                accessToken = authData.token;
-                            }
-                        }
-
-                    } catch (e) { }
-                    const avatarResponse = await axios.put(
-                        'https://backend-phygen.onrender.com/api/AccountUser/update-avatar',
-                        formData,
-                        {
-                            headers: {
-                                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-                                Accept: 'application/json',
-                                'Content-Type': 'multipart/form-data',
-                            },
-                        }
-                    );
-
-
-                    if (avatarResponse.data !== null) {
-                        Toast.show({
-                            type: 'success',
-                            text1: 'Avatar Updated',
-                            text2: 'Your avatar has been updated successfully.',
-                            position: 'top',
-                        });
-                        setAvatarInfo(null);
-                        setForm({
-                            ...form,
-                            avatar: avatarResponse.data.avatarUrl,
-                        });
-                    } else {
-                        Toast.show({
-                            type: 'error',
-                            text1: 'Error',
-                            text2: 'Failed to update avatar. Try again later.',
-                            position: 'top',
-                        });
-                        setLoadingUpdate(false);
-                        return;
+            if (form.avatarLocal) {
+                const formData = new FormData();
+                formData.append('File', {
+                    uri: Platform.OS === 'android' ? form.avatarLocal.uri : form.avatarLocal.uri.replace('file://', ''),
+                    name: form.avatarLocal.fileName,
+                    type: form.avatarLocal.mimeType,
+                });
+                let accessToken
+                accessToken = await AsyncStorage.getItem('Auth_Data');
+                if (accessToken) {
+                    const authData = JSON.parse(accessToken);
+                    if (authData && authData.token) {
+                        accessToken = authData.token;
                     }
-                } catch (avatarError) {
+                }
 
+                const avatarResponse = await axios.put(
+                    'https://backend-phygen.onrender.com/api/AccountUser/update-avatar',
+                    formData,
+                    {
+                        headers: {
+                            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+                            Accept: 'application/json',
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                );
+
+
+                if (avatarResponse.data !== null) {
+                    setForm((prevForm) => ({
+                        ...prevForm,
+                        avatar: avatarResponse.data.avatarUrl,
+
+                    }));
+                    Toast.show({
+                        type: 'success',
+                        text1: 'Avatar Updated',
+                        text2: 'Your avatar has been updated successfully.',
+                        position: 'top',
+                    });
+                } else {
                     Toast.show({
                         type: 'error',
                         text1: 'Error',
-                        text2: 'Failed to upload avatar. Try again later.',
+                        text2: 'Failed to update avatar. Try again later.',
                         position: 'top',
                     });
                     setLoadingUpdate(false);
@@ -139,7 +130,7 @@ const ProfileScreen = () => {
                 }
             }
 
-            // Update profile information
+
             const updateForm = {
                 school: form.school,
                 address: form.address,
@@ -156,12 +147,12 @@ const ProfileScreen = () => {
                     text2: 'Your profile has been updated successfully.',
                     position: 'top',
                 });
-
+                console.log(form)
                 setForm({
                     ...form,
                     password: '******',
                 });
-                setAvatarInfo(null);
+
             } else {
                 Toast.show({
                     type: 'error',
@@ -276,7 +267,7 @@ const ProfileScreen = () => {
                         <View className="items-center mb-8">
                             <View className="w-36 h-36 rounded-full bg-white justify-center items-center shadow-md relative">
                                 <Image
-                                    source={avatarInfo ? { uri: avatarInfo.uri } : (form.avatar ? { uri: form.avatar } : defaultAvatar)}
+                                    source={form.avatar ? { uri: form.avatar } : undefined}
                                     className="w-32 h-32 rounded-full"
                                     resizeMode="cover"
                                 />

@@ -2,6 +2,8 @@
   "expo": {
     "name": "phygen-ai-mobile",
     "slug": "phygen-ai-mobile",
+    "scheme": "phygenaimobile",
+    "owner": "ngocthb",
     "version": "1.0.0",
     "web": {
       "favicon": "./assets/favicon.png"
@@ -9,9 +11,7 @@
     "experiments": {
       "tsconfigPaths": true
     },
-    "plugins": [
-      "expo-font"
-    ],
+    "plugins": ["expo-font", "expo-web-browser"],
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "userInterfaceStyle": "light",
@@ -20,16 +20,20 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#ffffff"
+      },
+      "package": "com.ngocthb.phygenaimobile"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "bc098ca1-fc9f-490a-9df5-7736d1a39ef6"
       }
     }
   }

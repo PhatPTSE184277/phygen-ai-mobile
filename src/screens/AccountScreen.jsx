@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import bg1 from '../../assets/images/bg1.png';
-import defaultAvatar from '../../assets/images/defaultAvatar.png';
+
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuthLogic } from '../utils/authLogic';
 const { width, height } = Dimensions.get('window');
@@ -118,7 +118,7 @@ const AccountScreen = () => {
                         <View className='absolute top-16'>
                             <View className='w-24 h-24 rounded-full bg-white justify-center items-center shadow-md relative'>
                                 <Image
-                                    source={user?.avatarUrl ? { uri: user.avatarUrl } : defaultAvatar}
+                                    source={user?.avatarUrl ? { uri: user.avatarUrl } : undefined}
                                     className='w-20 h-20 rounded-full'
                                     resizeMode='cover'
                                 />
@@ -126,33 +126,9 @@ const AccountScreen = () => {
                             </View>
                         </View>
                     </View>
-                    {user?.accountType !== 'premium' && (<View className='bg-white rounded-2xl p-4 mb-6 shadow-md border border-[#E2E8F0]'>
-                        <View className='flex-row justify-between items-center mb-2'>
-                            <Text className='font-semibold text-lg text-[#333]'>
-                                Unlock all features with{'\n '}
-                                <Text className='text-[#5932EA]'>
-                                    EXAMIFY
-                                </Text>{' '}
-                                Premium
-                            </Text>
-                            <Text className='text-xs bg-[#4461F2] text-white font-bold px-3 py-1 rounded-full'>
-                                Premium
-                            </Text>
-                        </View>
-                        <Text className='text-base font-light mb-4 leading-5'>
-                            All-in-one tool for quick and easy test creation
-                            with full features.
-                        </Text>
-                        <TouchableOpacity
-                            className='bg-[#4461F2] rounded-xl py-3'
-                            onPress={() => navigation.navigate('Premium')}
-                        >
-                            <Text className='text-center text-white font-bold tracking-wide text-base'>
-                                TRY NOW
-                            </Text>
-                        </TouchableOpacity>
-                    </View>)}
+
                     <View className='px-4'>
+
                         {['Dashboard', 'My Profile', 'Generate', 'History'].map(
                             (label, index) => (
                                 <TouchableOpacity
@@ -172,6 +148,15 @@ const AccountScreen = () => {
                                 </TouchableOpacity>
                             )
                         )}
+                        {/* Chat menu item */}
+                        <TouchableOpacity
+                            className='flex-row justify-between items-center py-4'
+                            activeOpacity={0.7}
+                            onPress={() => navigation.navigate('Chat')}
+                        >
+                            <Text className='text-lg font-medium'>Chat</Text>
+                            <Ionicons name='chevron-forward' size={20} color='#858597' />
+                        </TouchableOpacity>
 
                         <TouchableOpacity
                             className='flex-row justify-between items-center py-4 border-t border-gray-200 mt-2'

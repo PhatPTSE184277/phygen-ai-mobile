@@ -5,33 +5,64 @@ import { BASE_API_URL } from '@env';
 
 const baseURL = BASE_API_URL;
 
-const getAccessToken = async () => {
+const getAuthData = async () => {
   try {
     const authDataString = await AsyncStorage.getItem('Auth_Data');
-    if (authDataString) {
-      const authData = JSON.parse(authDataString);
-      if (authData && authData.token) {
-        return authData.token;
-      }
-    }
-    return '';
+    return authDataString ? JSON.parse(authDataString) : null;
   } catch (error) {
-    console.log('Error getting access token:', error);
-    return '';
+    console.log('🔴 Error reading auth data:', error);
+    return null;
   }
+};
+
+const setAuthData = async (data) => {
+  try {
+    await AsyncStorage.setItem('Auth_Data', JSON.stringify(data));
+  } catch (error) {
+    console.log('🔴 Error saving auth data:', error);
+  }
+};
+
+const refreshAccessToken = async () => {
+  const authData = await getAuthData();
+  if (!authData?.refreshToken) return null;
+
+  try {
+    const res = await axios.post(`${baseURL}/api/Auth/refresh-token`, authData.refreshToken, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (res?.data?.success) {
+      const { accessToken, refreshToken, expiresIn } = res.data.data;
+      const updatedData = {
+        ...authData,
+        token: accessToken,
+        refreshToken,
+        expiryTime: Date.now() + expiresIn * 1000,
+      };
+      await setAuthData(updatedData);
+      return accessToken;
+    }
+  } catch (err) {
+    console.log('🔴 Refresh token failed:', err.message);
+  }
+
+  return null;
 };
 
 const axiosClient = axios.create({
   baseURL,
-  timeout: 5000, // Giảm timeout từ 10s xuống 5s
+  timeout: 5000,
   paramsSerializer: (params) => queryString.stringify(params),
 });
 
+// Add token to request headers
 axiosClient.interceptors.request.use(async (config) => {
-  const accessToken = await getAccessToken();
+  const authData = await getAuthData();
+  const token = authData?.token || '';
 
   config.headers = {
-    Authorization: accessToken ? `Bearer ${accessToken}` : '',
+    Authorization: token ? `Bearer ${token}` : '',
     Accept: 'application/json',
     'Content-Type': 'application/json',
     ...config.headers,
@@ -40,16 +71,58 @@ axiosClient.interceptors.request.use(async (config) => {
   return { ...config, data: config.data ?? null };
 });
 
-axiosClient.interceptors.response.use(
-  (res) => {
-    if (res && res.status >= 200 && res.status < 300) {
-      return res;
+// Auto-refresh token on 401
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
     } else {
-      return Promise.reject(res?.data || res);
+      prom.resolve(token);
     }
-  },
-  (error) => {
-    console.log('Axios error:', error.response?.status, error.message);
+  });
+  failedQueue = [];
+};
+
+axiosClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then((token) => {
+            originalRequest.headers.Authorization = `Bearer ${token}`;
+            return axiosClient(originalRequest);
+          })
+          .catch((err) => Promise.reject(err));
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const newToken = await refreshAccessToken();
+        if (newToken) {
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          processQueue(null, newToken);
+          return axiosClient(originalRequest);
+        } else {
+          processQueue(new Error('Refresh token failed'), null);
+        }
+      } catch (err) {
+        processQueue(err, null);
+        return Promise.reject(err);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
     return Promise.reject(error);
   }
 );
