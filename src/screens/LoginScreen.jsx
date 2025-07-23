@@ -21,10 +21,9 @@ import googleIcon from '../../assets/images/gg.png';
 import facebookIcon from '../../assets/images/fb.png';
 import Feather from 'react-native-vector-icons/Feather';
 import Ionicons from 'react-native-vector-icons/Ionicons';
-
-import * as WebBrowser from 'expo-web-browser';
-import * as Google from 'expo-auth-session/providers/google';
-
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import * as WebBrowser from "expo-web-browser";
+import auth from '@react-native-firebase/auth';
 WebBrowser.maybeCompleteAuthSession();
 const { width, height } = Dimensions.get('window');
 
@@ -37,21 +36,35 @@ const LoginScreen = () => {
     const [isPasswordShow, setIsPasswordShow] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const authData = useSelector(authSelector);
-
-    const [request, response, promptAsync] = Google.useAuthRequest({
-        androidClientId: '885565041467-8qliqdneg3rcf713f7qfkr77oamaaoba.apps.googleusercontent.com', // dùng khi build APK
-        scopes: ['openid', 'profile', 'email'],
-    });
-
-
     useEffect(() => {
-        if (response?.type === 'success') {
-            const { id_token } = response.authentication;
-            if (id_token) {
-                handleGoogleLogin(id_token);
+        GoogleSignin.configure({
+            webClientId: "1044921846734-3ce05ftg8pmrbc6kdhhhqbh2o125mv3n.apps.googleusercontent.com",
+            offlineAccess: true,
+        });
+    }, []);
+
+    const signInWithGoogle = async () => {
+        try {
+            await GoogleSignin.hasPlayServices();
+            await GoogleSignin.signOut();
+            const userInfo = await GoogleSignin.signIn();
+            console.log('[Google User Info]:', userInfo);
+            // const idToken = userInfo.data.idToken;
+
+            // const googleCredential = auth.GoogleAuthProvider.credential(idToken);
+
+            const idToken = await auth().currentUser.getIdToken();
+
+            if (idToken) {
+                handleGoogleLogin(idToken);
             }
+
+        } catch (error) {
+            console.error('[❌ Google Signin Error]', error);
         }
-    }, [response]);
+    };
+
+
 
 
 
@@ -61,17 +74,17 @@ const LoginScreen = () => {
             setIsLoading(true);
             const res = await axiosClient.post('/api/Auth/login/google', { idToken });
             if (res.data.success) {
+                console.log(res.data.data.user.username);
                 const expiresIn = res.data.data.expiresIn;
                 const expiryTime = new Date().getTime() + expiresIn * 1000;
                 const authData = {
                     token: res.data.data.token,
                     expiryTime: expiryTime,
-                    _id: res.data.data.account.id || '',
-                    username: res.data.data.account.username,
-                    email: res.data.data.account.email,
-                    emailVerified: res.data.data.account.emailVerified,
-                    accountType: res.data.data.account.accountType,
-                    role: res.data.data.account.role,
+                    _id: res.data.data.user.id || '',
+                    username: res.data.data.user.username || "",
+                    email: res.data.data.user.email || "",
+                    emailVerified: true,
+                    role: res.data.data.user.role || "user",
                     isFirstTimeUse: false
                 };
                 await AsyncStorage.setItem('Auth_Data', JSON.stringify(authData));
@@ -82,7 +95,7 @@ const LoginScreen = () => {
                 Toast.show({
                     type: 'success',
                     text1: 'Login Successful!',
-                    text2: `Welcome back, ${res.data.data.account.username}!`,
+                    text2: `Welcome back, ${res.data.data.user.username}!`,
                     position: 'top'
                 });
             } else {
@@ -340,8 +353,8 @@ const LoginScreen = () => {
                             shadowRadius: 8,
                             elevation: 3
                         }}
-                        onPress={() => promptAsync()}
-                        disabled={!request || isLoading}
+                        onPress={signInWithGoogle}
+                        disabled={isLoading}
                     >
                         <Image
                             source={googleIcon}

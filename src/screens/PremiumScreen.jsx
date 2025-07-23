@@ -18,7 +18,7 @@ const PremiumScreen = () => {
 
     const fetchUser = async () => {
         try {
-            const response = await axiosClient.get('/api/AccountUser/me');
+            const response = await axiosClient.get('/api/account_users/me');
             if (response.data.success) {
                 setUser(response.data.data);
             } else {
@@ -58,7 +58,7 @@ const PremiumScreen = () => {
                 <ScrollView className="flex-1 px-6 pt-8" contentContainerStyle={{ paddingBottom: 40 }}>
                     {/* Header with back button */}
                     <View className="flex-row items-center mb-8 mt-4">
-                        <Text className="text-2xl font-bold ">Premium Membership</Text>
+                        <Text className="text-2xl font-bold text-black">Premium Membership</Text>
                     </View>
                     {/* Card */}
                     <View className="bg-white rounded-3xl p-8 shadow-lg items-center mb-8 border border-gray-100">

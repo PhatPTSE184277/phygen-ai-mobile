@@ -15,7 +15,7 @@ export default function VNPayPaymentScreen({ navigation }) {
 
     const createVNPayOrder = async () => {
         try {
-            const response = await axiosClient.post('/api/Payment/create', {
+            const response = await axiosClient.post('/api/payments/vnpay', {
                 orderId: Date.now(),
                 fullName: 'Nguyen Van A',
                 amount: 599000,
@@ -53,7 +53,7 @@ export default function VNPayPaymentScreen({ navigation }) {
     const handleNavigationChange = async (navState) => {
         const { url } = navState;
 
-        if (url.includes('/api/Payment/vnpay-return')) {
+        if (url.includes('/api/payments/vnpay/return')) {
             setShowWebView(false);
 
             const responseCode = new URL(url).searchParams.get('vnp_ResponseCode');
@@ -67,7 +67,7 @@ export default function VNPayPaymentScreen({ navigation }) {
                     try {
                         const FCMToken = await getFCMToken();
                         await axios.post(
-                            'https://backend-phygen.onrender.com/api/Notification/send-premium-success',
+                            'https://backend-phygen.onrender.com/api/notifications/premium_upgrade',
                             `"${FCMToken}"`,
                             {
                                 headers: {

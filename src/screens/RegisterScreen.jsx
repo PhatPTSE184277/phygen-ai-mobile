@@ -66,7 +66,7 @@ const RegisterScreen = () => {
 
         try {
             setIsLoading(true);
-            const response = await axiosClient.post('/api/Auth/register', {
+            const response = await axiosClient.post('/api/auth/register', {
                 email,
                 password,
                 confirmPassword
@@ -81,7 +81,7 @@ const RegisterScreen = () => {
                 });
 
                 const res = await axios.post(
-                    'https://backend-phygen.onrender.com/api/EmailVerification/request',
+                    'https://backend-phygen.onrender.com/api/email_verification/request',
                     `"${email}"`,
                     {
                         headers: {

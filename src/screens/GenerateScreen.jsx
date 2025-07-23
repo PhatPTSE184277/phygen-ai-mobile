@@ -39,9 +39,9 @@ const GenerateScreen = () => {
         const fetchSubjects = async () => {
             setIsLoading(true);
             try {
-                const response = await axiosClient.get('/api/subjects/active');
+                const response = await axiosClient.get('/api/subjects?IsDeleted=false');
                 if (response.data.success) {
-                    const sortedSubjects = response.data.data.sort((a, b) => a.id - b.id);
+                    const sortedSubjects = response.data.data.items.sort((a, b) => a.id - b.id);
                     setSubjects(sortedSubjects);
 
                     const defaultSubject = sortedSubjects[0];

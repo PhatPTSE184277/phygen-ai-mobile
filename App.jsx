@@ -8,7 +8,7 @@ import {
     requestPushNotificationPermission,
     getFCMToken,
 } from './src/utils/pushNotification';
-
+import { Linking } from 'react-native';
 export default function App() {
     useEffect(() => {
         // Khởi tạo push notification khi app bắt đầu
@@ -26,7 +26,18 @@ export default function App() {
 
         initializePushNotifications();
     }, []);
+    const handleDeepLink = ({ url }) => {
+        console.log('🔗 [Foreground deep link]:', url);
+    };
 
+    const sub = Linking.addEventListener('url', handleDeepLink);
+
+    // ✅ Kiểm tra deep link khi app được mở từ trạng thái killed
+    Linking.getInitialURL().then((url) => {
+        if (url) {
+            console.log('🚀 [Initial deep link]:', url);
+        }
+    });
     return (
         <Provider store={store}>
             <AppNavigator />

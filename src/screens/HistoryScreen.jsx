@@ -101,17 +101,7 @@ const HistoryScreen = () => {
                 </Text>
             </View>
             <View className='px-8 flex-1'>
-                <View className='mt-4'>
-                    <View className="flex-row items-center bg-white rounded-2xl px-4 py-1 ">
-                        <Ionicons name="search" size={18} color="#B8B8D2" />
-                        <TextInput
-                            placeholder="Find Exams"
-                            placeholderTextColor="#B8B8D2"
-                            className="flex-1 p-3 text-black"
-                        />
-                        <Ionicons name="options-outline" size={20} color="#B8B8D2" />
-                    </View>
-                </View>
+
                 {loading ? (
                     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
                         <ActivityIndicator size="large" color="#3B82F6" className="mt-4 p-10" />

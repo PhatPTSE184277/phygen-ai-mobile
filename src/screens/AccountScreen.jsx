@@ -45,7 +45,7 @@ const AccountScreen = () => {
 
     const fetchUser = async () => {
         try {
-            const response = await axiosClient.get('/api/AccountUser/me');
+            const response = await axiosClient.get('/api/account_users/me');
             if (response.data.success) {
                 setUser(response.data.data);
             } else {
@@ -97,7 +97,7 @@ const AccountScreen = () => {
                 />
 
                 <ScrollView className='flex-1 p-6 pt-10'>
-                    <Text className='text-2xl font-bold mb-6'>My Account</Text>
+                    <Text className='text-2xl font-bold mb-6 text-black'>My Account</Text>
                     {/* Avatar + Gradient */}
                     <View className='items-center mb-14'>
                         <LinearGradient
@@ -137,7 +137,7 @@ const AccountScreen = () => {
                                     activeOpacity={0.7}
                                     onPress={() => handleMenuPress(label)}
                                 >
-                                    <Text className='text-lg font-medium'>
+                                    <Text className='text-lg font-medium text-black'>
                                         {label}
                                     </Text>
                                     <Ionicons
@@ -154,7 +154,7 @@ const AccountScreen = () => {
                             activeOpacity={0.7}
                             onPress={() => navigation.navigate('Chat')}
                         >
-                            <Text className='text-lg font-medium'>Chat</Text>
+                            <Text className='text-lg font-medium text-black'>Chat</Text>
                             <Ionicons name='chevron-forward' size={20} color='#858597' />
                         </TouchableOpacity>
 

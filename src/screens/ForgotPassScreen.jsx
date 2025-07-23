@@ -41,7 +41,7 @@ const ForgotPassScreen = () => {
         try {
             setLoading(true);
             const res = await axios.post(
-                'https://backend-phygen.onrender.com/api/ForgetPassword/request',
+                'https://backend-phygen.onrender.com/api/forget_password/request',
                 `"${email}"`,
                 {
                     headers: {
@@ -123,10 +123,10 @@ const ForgotPassScreen = () => {
                     </View>
 
                     <View className='items-center mb-6'>
-                        <Text className='text-2xl font-bold text-center text-text-title mb-2'>
+                        <Text className='text-2xl font-bold text-center text-text-title mb-2  text-black'>
                             Forgot Password?
                         </Text>
-                        <Text className='text-base text-gray-600 text-center leading-5'>
+                        <Text className='text-base text-gray-600 text-center leading-5 '>
                             Don’t worry, we’ll help you recover it right away!
                         </Text>
                     </View>

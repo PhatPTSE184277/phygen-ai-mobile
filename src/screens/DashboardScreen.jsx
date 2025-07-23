@@ -74,7 +74,7 @@ const DashboardScreen = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const response = await axiosClient.get('/api/AccountUser/me/exams');
+            const response = await axiosClient.get('/api/account_users/me/exams');
 
             console.log('Dashboard exams response:', response.data.data);
             if (response.data.success) {
@@ -171,14 +171,14 @@ const DashboardScreen = () => {
 
                 {/* Tổng quan */}
                 <View className="bg-white rounded-xl p-4 mb-6 shadow">
-                    <Text className="text-lg font-bold mb-2">Tổng quan</Text>
+                    <Text className="text-lg font-bold mb-2 text-black">Tổng quan</Text>
                     <Text className="text-base text-gray-700">Tổng số bài kiểm tra: <Text className="font-bold text-blue-600">{totalExams}</Text></Text>
                     <Text className="text-base text-gray-700">Tổng số câu hỏi: <Text className="font-bold text-blue-600">{totalQuestions}</Text></Text>
                 </View>
 
                 {/* Thống kê số bài kiểm tra theo tháng */}
                 <View className="bg-white rounded-xl p-4 mb-6 shadow">
-                    <Text className="text-lg font-bold mb-2">Số bài kiểm tra theo tháng</Text>
+                    <Text className="text-lg font-bold mb-2 text-black">Số bài kiểm tra theo tháng</Text>
                     {/* Biểu đồ cột: Tailwind, scroll ngang, không overflow */}
                     <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-4 px-2">
                         <View className="flex-row items-end" style={{ height: 250 }}>
@@ -208,7 +208,7 @@ const DashboardScreen = () => {
 
                 {/* Thống kê theo môn học */}
                 <View className="bg-white rounded-xl p-4 mb-6 shadow">
-                    <Text className="text-lg font-bold mb-2">Số câu hỏi theo môn học</Text>
+                    <Text className="text-lg font-bold mb-2 text-black">Số câu hỏi theo môn học</Text>
                     {Object.keys(subjectStats).length === 0 ? (
                         <Text className="text-gray-500">Không có dữ liệu</Text>
                     ) : (
@@ -220,7 +220,7 @@ const DashboardScreen = () => {
 
                 {/* Thống kê theo loại bài kiểm tra */}
                 <View className="bg-white rounded-xl p-4 mb-6 shadow">
-                    <Text className="text-lg font-bold mb-2">Số bài kiểm tra theo loại</Text>
+                    <Text className="text-lg font-bold mb-2 text-black">Số bài kiểm tra theo loại</Text>
                     {Object.keys(examTypeStats).length === 0 ? (
                         <Text className="text-gray-500">Không có dữ liệu</Text>
                     ) : (

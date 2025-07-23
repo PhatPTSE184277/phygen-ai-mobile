@@ -94,7 +94,7 @@ const ProfileScreen = () => {
                 }
 
                 const avatarResponse = await axios.put(
-                    'https://backend-phygen.onrender.com/api/AccountUser/update-avatar',
+                    'https://backend-phygen.onrender.com/api/account_users/update-avatar',
                     formData,
                     {
                         headers: {
@@ -139,7 +139,7 @@ const ProfileScreen = () => {
                 password: form.password !== '******' ? form.password : "",
             };
 
-            const response = await axiosClient.put('/api/AccountUser/me', updateForm);
+            const response = await axiosClient.put('/api/account_users/me', updateForm);
             if (response.data?.success) {
                 Toast.show({
                     type: 'success',
@@ -178,7 +178,7 @@ const ProfileScreen = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const response = await axiosClient.get('/api/AccountUser/me');
+            const response = await axiosClient.get('/api/account_users/me');
 
             if (response.data?.success) {
                 const data = response.data.data;
@@ -296,7 +296,7 @@ const ProfileScreen = () => {
                                         returnKeyType="next"
                                         onSubmitEditing={() => passwordRef.current.focus()}
                                         blurOnSubmit={false}
-                                        className="bg-gray-100 px-4 py-2 rounded-md mb-6"
+                                        className="bg-gray-100 px-4 py-2 rounded-md mb-6 text-black"
                                     />
 
                                     <Text className="text-sm text-gray-500 mb-2">Email Address</Text>
@@ -323,7 +323,7 @@ const ProfileScreen = () => {
                                             secureTextEntry={!isPasswordShow}
                                             returnKeyType="done"
                                             onSubmitEditing={handleSave}
-                                            className="bg-gray-100 px-4 py-2 rounded-md pr-10"
+                                            className="bg-gray-100 px-4 py-2 rounded-md pr-10 text-black"
                                         />
 
                                         {form.password !== '******' && (

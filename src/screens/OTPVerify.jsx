@@ -65,7 +65,7 @@ const OTPVerify = () => {
     const handleVerify = async () => {
         try {
             const code = otp.join('');
-            const response = await axiosClient.post('/api/EmailVerification/verify', {
+            const response = await axiosClient.post('/api/email_verification/verify', {
                 email: email,
                 code: code
             });
@@ -109,7 +109,7 @@ const OTPVerify = () => {
             setTimer(30); // Reset timer
 
             const res = await axios.post(
-                'https://backend-phygen.onrender.com/api/EmailVerification/request',
+                'https://backend-phygen.onrender.com/api/email_verification/request',
                 `"${email}"`,
                 {
                     headers: {
@@ -163,7 +163,7 @@ const OTPVerify = () => {
                     <Text className='text-blue-500 text-base font-medium'>{`<< Go Back`}</Text>
                 </TouchableOpacity>
 
-                <Text className="text-4xl font-bold text-center mb-4 mt-6">Almost there!</Text>
+                <Text className="text-4xl font-bold text-center mb-4 mt-6  text-black">Almost there!</Text>
                 <Text className="text-center text-gray-600 mb-8">
                     Please enter the 6-digit code sent to{"\n"}
                     <Text className="font-semibold">{email}</Text> to verify.
@@ -191,7 +191,7 @@ const OTPVerify = () => {
                             maxLength={1}
                             autoCapitalize="characters"
                             keyboardType="default"
-                            className="border border-gray-300 w-12 h-12 rounded-lg text-center text-xl"
+                            className="border border-gray-300 w-12 h-12 rounded-lg text-center text-xl  text-black"
                             onSubmitEditing={() => {
                                 if (index === 5) handleVerify(); // 👈 Gửi OTP khi nhấn Enter ở ô cuối
                             }}
@@ -214,12 +214,12 @@ const OTPVerify = () => {
                 </TouchableOpacity>
 
                 {/* Resend Timer */}
-                <Text className="text-center text-text-title font-semibold mb-2">
+                <Text className="text-center text-text-title font-semibold mb-2  text-black">
                     Didn't receive the code?
                 </Text>
 
                 {timer > 0 ? (
-                    <Text className="font-light text-text-title text-center">
+                    <Text className="font-light text-text-title text-center  text-black">
                         Request a new code in 00:{timer < 10 ? `0${timer}` : timer} seconds
                     </Text>
                 ) : (

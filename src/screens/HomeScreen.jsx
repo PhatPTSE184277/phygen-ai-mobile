@@ -67,7 +67,7 @@ const HomeScreen = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            const response = await axiosClient.get('/api/AccountUser/me/exams');
+            const response = await axiosClient.get('/api/account_users/me/exams');
             if (response.data.success) {
                 setExamsData(response.data.data);
                 calculateExamsThisMonth(response.data.data);
@@ -102,7 +102,7 @@ const HomeScreen = () => {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const response = await axiosClient.get('/api/AccountUser/me');
+                const response = await axiosClient.get('/api/account_users/me');
                 if (response.data.success) {
                     setUser(response.data.data);
                 } else {
@@ -187,7 +187,7 @@ const HomeScreen = () => {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    <Text className="text-2xl font-bold">
+                    <Text className="text-2xl font-bold text-gray-800">
                         {loading ? <ActivityIndicator size="small" className='p-1' color="#6366F1" /> : `${totalExamInMonth} exams`}
                     </Text>
 
@@ -243,20 +243,20 @@ const HomeScreen = () => {
 
 
                 <View className="mt-6 px-6">
-                    <Text className="text-lg font-semibold mb-2">Recent Exams</Text>
+                    <Text className="text-lg font-semibold mb-2 text-black">Recent Exams</Text>
 
                     {loading ? (
                         <ActivityIndicator size="large" color="#6366F1" className="mt-4 p-10" />
                     ) : examsData?.length === 0 ? (
                         <View className="bg-white rounded-xl px-4 py-6 mb-2 flex-row justify-between items-center">
-                            <Text className="text-base font-medium">You haven't created any exams yet</Text>
-                            <Ionicons name="file-tray-outline" size={30} color="gray" />
+                            <Text className="text-base font-medium  text-black">You haven't created any exams yet</Text>
+
                         </View>
                     ) :
                         examsData.slice(0, 3).map((exam) => (
                             <View key={exam.id} className="bg-white rounded-xl p-4 mb-2 flex-row justify-between items-center">
                                 <View>
-                                    <Text className="text-base font-semibold">{exam.examType}</Text>
+                                    <Text className="text-base font-semibold  text-black">{exam.examType}</Text>
                                     <Text className="text-sm text-gray-500">{exam.subjectName}</Text>
                                 </View>
                                 <View className="pl-4">
