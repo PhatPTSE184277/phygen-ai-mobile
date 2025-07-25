@@ -14,7 +14,9 @@ import { Ionicons } from '@expo/vector-icons';
 import bg1 from '../../assets/images/bg1.png';
 import ev from '../../assets/images/examreview.png';
 import MatrixLabels from '../constants/MatrixLabels';
-import axiosClient2 from '../apis/axiosClient2';
+import Toast from 'react-native-toast-message';
+import axiosClient from '../apis/axiosClient';
+import fetchClient from '../apis/fetchClient';
 
 const { width, height } = Dimensions.get('window');
 
@@ -23,34 +25,65 @@ const SummaryScreen = () => {
     const route = useRoute();
     const examData = route.params?.examPreview || {};
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    console.log(examData)
 
     const handleBack = () => {
         navigation.goBack();
     };
 
     const handleGenerate = async () => {
-        setError('');
         setLoading(true);
         try {
-            const payload = {
-                subjectId: examData.subjectId,
-                examType: examData.examType,
-                difficultyLevel: examData.difficultyLevel,
-                examQuantity: examData.examQuantity
-            };
-            const res = await axiosClient2.post('/api/exams', payload);
-            if (res.data && res.data.success) {
-                navigation.navigate('Overview', { examResult: res.data });
+            if (!examData.matrixId || !examData.subjectId || !examData.examType || !examData.examQuantity) {
+                Toast.show({
+                    type: 'error',
+                    text1: 'Missing Information',
+                    text2: 'Please fill in all required fields!',
+                    position: 'top'
+                });
+                setLoading(false);
+                return;
+            }
+            const res = await axiosClient.post(`/api/AI/${examData.matrixId}`);
+
+            if (res.data) {
+                try {
+                    const markdownRes = await fetchClient.post(`/api/exams/markdown?quantity=${examData.examQuantity.toString()}`, res.data);
+
+                    if (markdownRes.data && markdownRes.data.success) {
+                        navigation.navigate('Overview', {
+                            examResult: markdownRes.data.data,
+                            examData
+                        });
+                    } else {
+                        Toast.show({
+                            type: 'error',
+                            text1: 'Markdown Generation Failed',
+                            text2: markdownRes.data?.message || 'Unable to generate markdown.',
+                            position: 'top'
+                        });
+                    }
+                } catch (markdownError) {
+                    console.log('Error generating markdown:', markdownError);
+                    Toast.show({
+                        type: 'error',
+                        text1: 'Markdown Error',
+                        text2: 'An error occurred while generating markdown.',
+                        position: 'top'
+                    });
+                }
             }
         } catch (err) {
             console.log('Error generate exam:', err);
+            Toast.show({
+                type: 'error',
+                text1: 'API Error',
+                text2: 'An error occurred while generating the exam.',
+                position: 'top'
+            });
         } finally {
             setLoading(false);
         }
     };
-
     return (
         <View className='flex-1 bg-gray-100 relative'>
             <StatusBar backgroundColor='#F3F4F6' barStyle='dark-content' />
@@ -117,7 +150,7 @@ const SummaryScreen = () => {
                             </View>
                             <View className='flex-1 justify-center'>
                                 <Text className='text-lg font-bold text-gray-900 mb-2'>
-                                    {examData.title || 'No Title'}
+                                    {examData.title || 'Exam'}
                                 </Text>
                             </View>
                         </View>
@@ -140,14 +173,6 @@ const SummaryScreen = () => {
                             </View>
                             <View className='flex-row justify-between items-center'>
                                 <Text className='text-gray-700 font-medium'>
-                                    Level:
-                                </Text>
-                                <Text className='text-gray-400 font-normal'>
-                                    {examData.difficultyLevel || '-'}
-                                </Text>
-                            </View>
-                            <View className='flex-row justify-between items-center'>
-                                <Text className='text-gray-700 font-medium'>
                                     Variants:
                                 </Text>
                                 <Text className='text-gray-400 font-normal'>
@@ -155,11 +180,6 @@ const SummaryScreen = () => {
                                 </Text>
                             </View>
                         </View>
-                        {error ? (
-                            <Text style={{ color: 'red', marginTop: 16, textAlign: 'center' }}>
-                                {error}
-                            </Text>
-                        ) : null}
                     </ScrollView>
                 </View>
                 <View className='pb-8'>
