@@ -13,12 +13,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
 import bg1 from '../../assets/images/bg1.png';
 import fetchClient from '../apis/fetchClient';
+import MatrixLabels from '../constants/MatrixLabels';
 
 const { width, height } = Dimensions.get('window');
 
 const OverviewScreen = ({ navigation }) => {
     const route = useRoute();
     const examResult = route.params?.examResult;
+    const examData = route.params?.examData;
     const [examsWithPdf, setExamsWithPdf] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [hasFetched, setHasFetched] = useState(false);
@@ -27,7 +29,6 @@ const OverviewScreen = ({ navigation }) => {
         try {
             const markdown = exam.examContentMarkdown;
 
-            // Clean examCode để tránh lỗi S3 key invalid
             const cleanExamCode = exam.examCode
                 .replace(/[^a-zA-Z0-9_-]/g, '_')
                 .replace(/__+/g, '_')
@@ -131,9 +132,38 @@ const OverviewScreen = ({ navigation }) => {
                     Overview
                 </Text>
             </View>
+            
+            {/* Hiển thị thông tin môn học và loại đề */}
+            {examData && (
+                <View className='px-6 pb-4' style={{ zIndex: 1 }}>
+                    <View
+                        className='bg-white rounded-2xl p-4 mb-4'
+                        style={{
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 4,
+                            elevation: 4,
+                        }}
+                    >
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <Text className='text-gray-700 font-medium'>Subject:</Text>
+                            <Text className='text-gray-900 font-bold'>{examData.subjectName || '-'}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <Text className='text-gray-700 font-medium'>Exam type:</Text>
+                            <Text className='text-gray-900 font-bold'>
+                                {MatrixLabels[examData.examType] || examData.examType || '-'}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+            )}
+
             {isLoading ? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color="#3B82F6" className="mt-4 p-10" />
+                    <ActivityIndicator size="large" color="#3B82F6" />
+                    <Text style={{ marginTop: 10, color: '#3B82F6' }}>Generating PDFs...</Text>
                 </View>
             ) : (
                 <View className='flex-1 px-6' style={{ zIndex: 1 }}>
@@ -156,7 +186,7 @@ const OverviewScreen = ({ navigation }) => {
                             }}
                         >
                             <Text className='text-lg font-bold text-gray-900 mb-4'>
-                                {examResult?.message || 'Exam Overview'}
+                                Generated Exams
                             </Text>
                             <View
                                 style={{
@@ -171,10 +201,10 @@ const OverviewScreen = ({ navigation }) => {
                                         activeOpacity={0.8}
                                         onPress={() => {
                                             const examId = examResult.examId;
-                                            const examData = examsWithPdf ? examsWithPdf[idx] : examResult.generatedExams[idx];
-                                            if (!examData) return;
+                                            const examToPass = examsWithPdf ? examsWithPdf[idx] : examResult.generatedExams[idx];
+                                            if (!examToPass) return;
                                             navigation.navigate('ExamDetail', {
-                                                exam: examData,
+                                                exam: examToPass,
                                                 examId
                                             });
                                         }}
@@ -190,7 +220,7 @@ const OverviewScreen = ({ navigation }) => {
                                                 {exam?.examCode || 'Unknown Code'}
                                             </Text>
                                             <Text className='text-sm text-gray-500'>
-                                                Tap to view detail
+                                                {exam?.pdfUrl ? 'Ready to download' : 'Tap to view detail'}
                                             </Text>
                                         </View>
                                         <Ionicons
