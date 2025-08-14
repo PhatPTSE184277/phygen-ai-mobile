@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1044921846734",
+    "project_id": "phygenai-6dc80",
+    "storage_bucket": "phygenai-6dc80.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1044921846734:android:934e2cd991dd69e2a5f99f",
+        "android_client_info": {
+          "package_name": "com.ngocthb.phygenaimobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAeCsk_G4WhWI4mUM3XwaGeWKSmmI_sDmE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

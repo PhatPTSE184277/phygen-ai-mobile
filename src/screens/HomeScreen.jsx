@@ -13,7 +13,7 @@ import bg1 from '../../assets/images/bg1.png';
 import homepage1 from '../../assets/images/homepage1.png';
 import homepage2 from '../../assets/images/homepage2.png';
 import homepage3 from '../../assets/images/homepage3.png';
-import defaultAvatar from '../../assets/images/defaultAvatar.png';
+
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axiosClient from '~/apis/axiosClient';
@@ -171,7 +171,7 @@ const HomeScreen = () => {
                         <Text className="text-lg font-light text-white">Let&apos;s start create exam</Text>
                     </View>
                     <Image
-                        source={user?.avatarUrl ? { uri: user.avatarUrl } : defaultAvatar}
+                        source={user?.avatarUrl || { uri: user.avatarUrl }}
                         className="w-24 h-24 rounded-full border-2 border-white "
                     />
                 </LinearGradient>

@@ -12,7 +12,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import bg1 from '../../assets/images/bg1.png';
-import defaultAvatar from '../../assets/images/defaultAvatar.png';
+
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useAuthLogic } from '../utils/authLogic';
 const { width, height } = Dimensions.get('window');
@@ -118,7 +118,7 @@ const AccountScreen = () => {
                         <View className='absolute top-16'>
                             <View className='w-24 h-24 rounded-full bg-white justify-center items-center shadow-md relative'>
                                 <Image
-                                    source={user?.avatarUrl ? { uri: user.avatarUrl } : defaultAvatar}
+                                    source={user?.avatarUrl || { uri: user.avatarUrl }}
                                     className='w-20 h-20 rounded-full'
                                     resizeMode='cover'
                                 />

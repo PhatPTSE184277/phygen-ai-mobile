@@ -24,7 +24,6 @@ import axios from 'axios';
 import { useAuthLogic } from '../utils/authLogic';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const defaultAvatar = require('../../assets/images/defaultAvatar.png');
 const bg1 = require('../../assets/images/bg1.png');
 
 const { width, height } = Dimensions.get('window');
@@ -276,7 +275,7 @@ const ProfileScreen = () => {
                         <View className="items-center mb-8">
                             <View className="w-36 h-36 rounded-full bg-white justify-center items-center shadow-md relative">
                                 <Image
-                                    source={avatarInfo ? { uri: avatarInfo.uri } : (form.avatar ? { uri: form.avatar } : defaultAvatar)}
+                                    source={avatarInfo ? { uri: avatarInfo.uri } : (form.avatar || { uri: form.avatar })}
                                     className="w-32 h-32 rounded-full"
                                     resizeMode="cover"
                                 />
