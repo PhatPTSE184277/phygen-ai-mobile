@@ -12,7 +12,6 @@ const ExamDetailScreen = () => {
     const route = useRoute();
     const navigation = useNavigation();
     const exam = route.params?.exam;
-    const examId = route.params?.examId;
     const { width, height } = useWindowDimensions();
     const [loading, setLoading] = useState(false);
 
@@ -148,10 +147,8 @@ const ExamDetailScreen = () => {
                     )}
                 </TouchableOpacity>
             </View>
-
-
             <TouchableOpacity
-                onPress={() => navigation.navigate('Chat', { examId })}
+                onPress={() => navigation.navigate('Chat')}
                 activeOpacity={0.85}
                 style={{
                     position: 'absolute',

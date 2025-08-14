@@ -13,162 +13,88 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRoute } from '@react-navigation/native';
 import bg1 from '../../assets/images/bg1.png';
 import fetchClient from '../apis/fetchClient';
-import { printToFileAsync } from 'expo-print';
-import { marked } from 'marked';
+import MatrixLabels from '../constants/MatrixLabels';
 
 const { width, height } = Dimensions.get('window');
 
 const OverviewScreen = ({ navigation }) => {
     const route = useRoute();
     const examResult = route.params?.examResult;
+    const examData = route.params?.examData;
     const [examsWithPdf, setExamsWithPdf] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [hasFetched, setHasFetched] = useState(false);
 
-    const generatePdfFromHtml = async (htmlContent, fileName) => {
+    const uploadMarkdown = async (exam, examId) => {
         try {
-            const pdf = await printToFileAsync({
-                html: htmlContent,
-                base64: false,
-            });
+            const markdown = exam.examContentMarkdown;
 
-            return {
-                uri: pdf.uri,
-                name: `${fileName}.pdf`,
-                type: 'application/pdf',
-            };
-        } catch (error) {
-            console.error('Error generating PDF:', error);
-            throw error;
-        }
-    };
+            const cleanExamCode = exam.examCode
+                .replace(/[^a-zA-Z0-9_-]/g, '_')
+                .replace(/__+/g, '_')
+                .replace(/^_|_$/g, '');
 
-    const parseFormattedMarkdown = (raw) => {
-        return raw
-            .replace(/\\n/g, '\n')
-            .replace(/^([A-D])\./gm, '- $1.')
-            .replace(/(\*\*Câu \d+\*\*:.*?)\n(?=\S)/g, '$1\n')
-            .replace(/^(Khối:.*)$/m, '$1\n\n')
-            .replace(/^(Môn:.*)$/m, '$1\n\n')
-            .replace(/^(Thời gian làm bài:.*)$/m, '$1\n\n')
-
-    };
-
-
-    const generatePdfAndUpload = async (exam, examId) => {
-        try {
-            const sanitizedFileName = exam.examCode.replace(/[^a-zA-Z0-9_.-]/g, '_');
-
-            const markdown = parseFormattedMarkdown(exam.examContentMarkdown);
-
-            const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <style>
-                body {
-                    font-family: "Times New Roman", serif;
-                    margin: 40px;
-                    line-height: 1.6;
-                    font-size: 16px;
-                }
-                h1 {
-                    font-weight: bold;
-                    text-align: center;
-                }
-                h1 {
-                    font-size: 28px;
-                    margin-bottom: 0;
-                }
-               h2 {
-                    font-weight: bold;
-                    text-align: left;
-                    margin-top: 32px;
-                    font-size: 20px;
-                }
-                p {
-                    margin: 12px 0;
-                }
-                .question {
-                    margin: 16px 0;
-                    font-weight: bold;
-                }
-                ul {
-                    list-style-type: none;
-                    padding-left: 12px;
-                }
-                li {
-                    margin-bottom: 4px;
-                }
-                .footer {
-                    text-align: center;
-                    margin-top: 60px;
-                    font-style: italic;
-                    font-size: 14px;
-                }
-            </style>
-        </head>
-        <body>
-           <div class="exam-content">
-                ${marked(markdown)}
-            </div>
-            <hr>
-            <p class="footer">HẾT</p>
-        </body>
-        </html>`;
-
-            const pdfFile = await generatePdfFromHtml(htmlContent, sanitizedFileName);
+            console.log('Original examCode:', exam.examCode);
+            console.log('Cleaned examCode:', cleanExamCode);
+            console.log('ExamId:', examId);
 
             const formData = new FormData();
-            formData.append('file', {
-                uri: pdfFile.uri,
-                name: `${sanitizedFileName}.pdf`,
-                type: 'application/pdf',
-            });
-
             formData.append('examVersionJson', JSON.stringify({
-                versionCode: exam.examCode,
+                versionCode: cleanExamCode,
                 nameBucket: 'exam-pdfs',
             }));
+            formData.append('markdown', markdown);
+
+            console.log('FormData created, calling API...');
 
             const res = await fetchClient.post(
-                `/api/exam-versions/by-exam/${examId}`,
+                `/api/exam-versions/by-exam/${examId}/version-2`,
                 formData
             );
 
+            console.log('API Response:', res);
+
             if (!res.ok) {
-                const errorText = await res.text();
-                console.error('API Error:', errorText);
+                console.error('API returned error status:', res.status);
+                console.error('Error data:', res.data);
                 return { ...exam, pdfUrl: null };
             }
 
-            const responseJson = await res.json();
+            if (!res.data || !res.data.success) {
+                console.error('API response invalid:', res.data?.message || 'Unknown error');
+                return { ...exam, pdfUrl: null };
+            }
+
+            const pdfUrl = res.data?.data?.pdfUrl;
+            console.log('PDF URL extracted:', pdfUrl);
 
             return {
                 ...exam,
-                pdfUrl: responseJson?.data?.pdfUrl || null,
+                examCode: cleanExamCode,
+                pdfUrl: pdfUrl || null,
             };
         } catch (error) {
-            console.error('Error generating PDF:', error);
+            console.error('Error uploading markdown:', error);
+            console.error('Error details:', error.message);
             return { ...exam, pdfUrl: null };
         }
     };
 
     useEffect(() => {
         if (!hasFetched && examResult) {
-            const fetchPdfLinks = async () => {
-                if (!examResult?.data?.generatedExams) return;
-                const examId = examResult.data.examId;
-                const exams = examResult.data.generatedExams;
+            const fetchMarkdownLinks = async () => {
+                if (!examResult?.generatedExams) return;
+                const examId = examResult.examId;
+                const exams = examResult.generatedExams;
 
                 const results = await Promise.all(
-                    exams.map((exam) => generatePdfAndUpload(exam, examId))
+                    exams.map((exam) => uploadMarkdown(exam, examId))
                 );
 
                 setExamsWithPdf(results);
                 setIsLoading(false);
             };
-            fetchPdfLinks();
+            fetchMarkdownLinks();
             setHasFetched(true);
         }
     }, [examResult]);
@@ -206,9 +132,38 @@ const OverviewScreen = ({ navigation }) => {
                     Overview
                 </Text>
             </View>
+
+            {/* Hiển thị thông tin môn học và loại đề */}
+            {examData && (
+                <View className='px-6 pb-4' style={{ zIndex: 1 }}>
+                    <View
+                        className='bg-white rounded-2xl p-4 mb-4'
+                        style={{
+                            shadowColor: '#000',
+                            shadowOffset: { width: 0, height: 2 },
+                            shadowOpacity: 0.1,
+                            shadowRadius: 4,
+                            elevation: 4,
+                        }}
+                    >
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <Text className='text-gray-700 font-medium'>Subject:</Text>
+                            <Text className='text-gray-900 font-bold'>{examData.subjectName || '-'}</Text>
+                        </View>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                            <Text className='text-gray-700 font-medium'>Exam type:</Text>
+                            <Text className='text-gray-900 font-bold'>
+                                {MatrixLabels[examData.examType] || examData.examType || '-'}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
+            )}
+
             {isLoading ? (
                 <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                    <ActivityIndicator size="large" color="#3B82F6" className="mt-4 p-10" />
+                    <ActivityIndicator size="large" color="#3B82F6" />
+                    <Text style={{ marginTop: 10, color: '#3B82F6' }}>Generating PDFs...</Text>
                 </View>
             ) : (
                 <View className='flex-1 px-6' style={{ zIndex: 1 }}>
@@ -231,7 +186,7 @@ const OverviewScreen = ({ navigation }) => {
                             }}
                         >
                             <Text className='text-lg font-bold text-gray-900 mb-4'>
-                                {examResult?.message || 'Exam Overview'}
+                                Generated Exams
                             </Text>
                             <View
                                 style={{
@@ -239,25 +194,19 @@ const OverviewScreen = ({ navigation }) => {
                                     width: '100%'
                                 }}
                             >
-                                {(examsWithPdf || examResult?.data?.generatedExams)?.map((exam, idx) => (
+                                {(examsWithPdf || examResult?.generatedExams)?.map((exam, idx) => (
                                     <TouchableOpacity
                                         key={idx}
                                         className='bg-gray-100 rounded-2xl px-4 py-4 flex-row justify-between items-center mb-2'
                                         activeOpacity={0.8}
                                         onPress={() => {
-                                            if (!examResult?.data?.examId || !examsWithPdf) {
-                                                console.error('Invalid data: examResult or examsWithPdf is null');
-                                                return;
-                                            }
-
-                                            const examId = examResult.data.examId;
-                                            const exam = examsWithPdf[idx] || examResult.data.generatedExams[idx];
-                                            if (!exam) {
-                                                console.error('Invalid exam data');
-                                                return;
-                                            }
-
-                                            navigation.navigate('ExamDetail', { exam, examId });
+                                            const examId = examResult.examId;
+                                            const examToPass = examsWithPdf ? examsWithPdf[idx] : examResult.generatedExams[idx];
+                                            if (!examToPass) return;
+                                            navigation.navigate('ExamDetail', {
+                                                exam: examToPass,
+                                                examId
+                                            });
                                         }}
                                         style={{
                                             shadowColor: '#000',
@@ -271,7 +220,7 @@ const OverviewScreen = ({ navigation }) => {
                                                 {exam?.examCode || 'Unknown Code'}
                                             </Text>
                                             <Text className='text-sm text-gray-500'>
-                                                Tap to view detail
+                                                {exam?.pdfUrl ? 'Ready to download' : 'Tap to view detail'}
                                             </Text>
                                         </View>
                                         <Ionicons
@@ -304,6 +253,7 @@ const OverviewScreen = ({ navigation }) => {
                     </View>
                 </View>
             )}
+
         </View>
     );
 };
